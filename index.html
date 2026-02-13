@@ -285,42 +285,6 @@
             background: var(--primary);
             color: white;
         }
-
-        /* Mode indicator styles */
-        .mode-status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-        .mode-status.auto {
-            background: var(--success);
-            color: white;
-        }
-        .mode-status.manual {
-            background: var(--primary);
-            color: white;
-        }
-
-        .price-preview-box {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin: 15px 0;
-            text-align: center;
-        }
-        .price-preview-box .current-price {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-        .price-preview-box .price-label {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-bottom: 5px;
-        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -376,77 +340,38 @@
                 </div>
             </section>
 
-            <!-- Admin: Market & Settings - UPDATED WITH AUTO/MANUAL MODE -->
+            <!-- Admin: Market & Settings -->
             <section id="admin-market" class="section hidden">
                 <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
-                <h3 class="text-orange" style="margin-top: 15px;">
-                    Price Control 
-                    <span id="current-mode-badge" class="mode-status manual">MANUAL</span>
-                </h3>
+                <h3 class="text-orange" style="margin-top: 15px;">App Settings</h3>
                 
-                <!-- Price Preview -->
-                <div class="price-preview-box">
-                    <div class="price-label">Current Market Price</div>
-                    <div class="current-price"><span id="admin-current-price">0.00</span> PKR</div>
-                    <div style="font-size: 0.8rem; margin-top: 5px; opacity: 0.7;">
-                        Mode: <span id="admin-mode-text">Manual</span>
-                    </div>
-                </div>
-
-                <!-- Mode Selection -->
-                <div class="input-group" style="background: var(--bg-card); padding: 15px; border-radius: 8px; border: 1px solid #333;">
-                    <label style="color: var(--primary); font-weight: bold;"><i class="fas fa-exchange-alt"></i> Select Price Mode</label>
-                    <select id="admin-rate-mode" onchange="window.toggleRateMode()" style="margin-top: 10px;">
-                        <option value="manual">Manual Control</option>
-                        <option value="auto">Auto Fluctuation</option>
+                <div class="input-group">
+                    <label>Rate Mode</label>
+                    <select id="admin-rate-mode" onchange="window.toggleRateMode()">
+                        <option value="manual">Manual</option>
+                        <option value="auto">Auto</option>
                     </select>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;">
-                        <i class="fas fa-info-circle"></i> 
-                        <span id="mode-description">Manual: You control the price directly. Auto: Price moves automatically in range.</span>
-                    </p>
                 </div>
 
-                <!-- Manual Controls -->
                 <div id="manual-controls">
-                    <div class="settings-divider">Manual Price Settings</div>
                     <div class="input-group">
                         <label>TK Price (USDT) - Internal Rate</label>
-                        <input type="number" id="admin-tk-price" step="0.01" placeholder="e.g. 1.50">
+                        <input type="number" id="admin-tk-price" step="0.01">
                     </div>
                     <div class="input-group">
                         <label>USDT to PKR Rate (For Display)</label>
-                        <input type="number" id="admin-usdt-rate" step="0.01" placeholder="e.g. 280">
+                        <input type="number" id="admin-usdt-rate" step="0.01">
                     </div>
                 </div>
 
-                <!-- Auto Controls -->
                 <div id="auto-controls" class="hidden">
-                    <div class="settings-divider">Auto Fluctuation Settings</div>
                     <div class="input-group">
-                        <label>Base Price (PKR) - Center Point</label>
-                        <input type="number" id="admin-base-price" step="0.01" placeholder="e.g. 280">
-                        <small style="color: var(--text-muted); font-size: 0.75rem;">
-                            Price will fluctuate around this value
-                        </small>
-                    </div>
-                    <div class="input-group">
-                        <label>Fluctuation Range (± PKR)</label>
-                        <input type="number" id="admin-auto-range" step="1" value="50" placeholder="e.g. 50">
-                        <small style="color: var(--text-muted); font-size: 0.75rem;">
-                            Price will move between (Base - Range) and (Base + Range)
-                        </small>
+                        <label>Fluctuation Range (PKR)</label>
+                        <input type="number" id="admin-auto-range" value="100" step="1">
                     </div>
                     <div class="input-group">
                         <label>Update Interval (seconds)</label>
-                        <input type="number" id="admin-auto-interval" step="1" value="30" placeholder="e.g. 30">
-                        <small style="color: var(--text-muted); font-size: 0.75rem;">
-                            How often price updates (all devices sync to this)
-                        </small>
-                    </div>
-                    <div style="background: rgba(0,200,83,0.1); border: 1px solid var(--success); padding: 10px; border-radius: 6px; margin: 10px 0;">
-                        <small style="color: var(--success);">
-                            <i class="fas fa-sync"></i> <strong>Auto Mode Active:</strong> Price moves automatically based on server time. All users see the same price simultaneously.
-                        </small>
+                        <input type="number" id="admin-auto-interval" value="30" step="1">
                     </div>
                 </div>
 
@@ -749,7 +674,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let marketData = { tkPrice: 1.50, usdtRate: 280, mode: 'manual' };
+        let marketData = { tkPrice: 1.50, usdtRate: 280 };
         let appSettings = { minWithdraw: 50, withdrawFee: 0.05 }; 
         let adminSelectedChatUser = null; 
 
@@ -763,67 +688,18 @@
             setTimeout(() => toast.remove(), 3000);
         }
 
-        // ======== AUTO/MANUAL MODE TOGGLE ========
         window.toggleRateMode = () => {
             const mode = document.getElementById('admin-rate-mode').value;
             const manualControls = document.getElementById('manual-controls');
             const autoControls = document.getElementById('auto-controls');
-            const modeDesc = document.getElementById('mode-description');
-            const modeBadge = document.getElementById('current-mode-badge');
-            const modeText = document.getElementById('admin-mode-text');
             
             if (mode === 'auto') {
                 manualControls.classList.add('hidden');
                 autoControls.classList.remove('hidden');
-                modeDesc.innerText = 'Auto: Price fluctuates automatically within range based on server time. All devices see synchronized price.';
-                modeBadge.innerText = 'AUTO';
-                modeBadge.className = 'mode-status auto';
-                modeText.innerText = 'Auto Fluctuation';
-                
-                // Set default base price if not set
-                const basePriceInput = document.getElementById('admin-base-price');
-                if (!basePriceInput.value) {
-                    basePriceInput.value = (marketData.tkPrice * marketData.usdtRate).toFixed(2);
-                }
             } else {
                 manualControls.classList.remove('hidden');
                 autoControls.classList.add('hidden');
-                modeDesc.innerText = 'Manual: You control the price directly. Price stays fixed until you change it.';
-                modeBadge.innerText = 'MANUAL';
-                modeBadge.className = 'mode-status manual';
-                modeText.innerText = 'Manual Control';
             }
-        }
-
-        // Calculate current auto price based on server time (for preview)
-        function calculateAutoPricePreview() {
-            const basePrice = parseFloat(document.getElementById('admin-base-price').value) || 280;
-            const range = parseFloat(document.getElementById('admin-auto-range').value) || 50;
-            const interval = parseFloat(document.getElementById('admin-auto-interval').value) || 30;
-            
-            const now = Date.now();
-            const intervalMs = interval * 1000;
-            const timeSlot = Math.floor(now / intervalMs);
-            const cycleDuration = 10;
-            const positionInCycle = (timeSlot % cycleDuration) / cycleDuration;
-            const sineValue = Math.sin(positionInCycle * Math.PI * 2);
-            const fluctuation = ((sineValue + 1) / 2) * (range * 2) - range;
-            
-            return basePrice + fluctuation;
-        }
-
-        // Update price preview
-        function updatePricePreview() {
-            const mode = marketData.mode || 'manual';
-            let currentPrice;
-            
-            if (mode === 'auto') {
-                currentPrice = calculateAutoPricePreview();
-            } else {
-                currentPrice = (marketData.tkPrice * marketData.usdtRate) || 280;
-            }
-            
-            document.getElementById('admin-current-price').innerText = currentPrice.toFixed(2);
         }
 
         window.viewWithdrawDetails = (key, userEmail, method, account, amount, total, userId) => {
@@ -864,9 +740,9 @@
         window.copyToClipboard = (elementId) => {
             const text = document.getElementById(elementId).innerText;
             navigator.clipboard.writeText(text).then(() => {
-                window.showToast('Copied to clipboard!');
+                showToast('Copied to clipboard!');
             }).catch(() => {
-                window.showToast('Failed to copy', 'error');
+                showToast('Failed to copy', 'error');
             });
         }
 
@@ -884,21 +760,10 @@
                 const data = snapshot.val();
                 if (data) {
                     marketData = data;
-                    
-                    // Update UI with current mode
                     document.getElementById('admin-rate-mode').value = data.mode || 'manual';
-                    document.getElementById('admin-auto-range').value = data.autoRange || 50;
+                    document.getElementById('admin-auto-range').value = data.autoRange || 100;
                     document.getElementById('admin-auto-interval').value = data.autoInterval || 30;
-                    
-                    // Update base price in auto mode
-                    if (data.mode === 'auto' && data.basePrice) {
-                        document.getElementById('admin-base-price').value = data.basePrice;
-                    } else {
-                        document.getElementById('admin-base-price').value = (data.tkPrice * data.usdtRate).toFixed(2);
-                    }
-                    
-                    window.toggleRateMode();
-                    updatePricePreview();
+                    toggleRateMode();
                 }
             });
 
@@ -919,9 +784,6 @@
                     appSettings.minSavings = data.minSavings || 1000;
                 }
             });
-            
-            // Update price preview every 5 seconds
-            setInterval(updatePricePreview, 5000);
         }
 
         window.showAdminSection = (sectionId) => {
@@ -941,17 +803,9 @@
             document.getElementById('admin-tk-price').value = marketData.tkPrice || 1.50;
             document.getElementById('admin-usdt-rate').value = marketData.usdtRate || 280;
             document.getElementById('admin-rate-mode').value = marketData.mode || 'manual';
-            document.getElementById('admin-auto-range').value = marketData.autoRange || 50;
+            document.getElementById('admin-auto-range').value = marketData.autoRange || 100;
             document.getElementById('admin-auto-interval').value = marketData.autoInterval || 30;
             
-            // Set base price for auto mode
-            if (marketData.mode === 'auto' && marketData.basePrice) {
-                document.getElementById('admin-base-price').value = marketData.basePrice;
-            } else {
-                document.getElementById('admin-base-price').value = ((marketData.tkPrice || 1.50) * (marketData.usdtRate || 280)).toFixed(2);
-            }
-            
-            window.toggleRateMode();
             document.getElementById('admin-min-transfer').value = appSettings.minTransfer || 10;
             document.getElementById('admin-transfer-tax').value = (appSettings.transferTax * 100) || 2;
             document.getElementById('admin-min-deposit').value = appSettings.minDeposit || 500;
@@ -961,41 +815,27 @@
             document.getElementById('admin-savings-90').value = appSettings.savings90 || 4.0;
             document.getElementById('admin-min-savings').value = appSettings.minSavings || 1000;
             
+            toggleRateMode();
             document.getElementById('admin-min-withdraw').value = appSettings.minWithdraw || 50;
             document.getElementById('admin-withdraw-fee').value = (appSettings.withdrawFee * 100) || 5;
             document.getElementById('admin-easypaisa').value = appSettings.easypaisa || '0300-1234567';
             document.getElementById('admin-jazzcash').value = appSettings.jazzcash || '0321-7654321';
             document.getElementById('admin-tillid').value = appSettings.tillid || '03XX-XXXXXXX (Raast)';
             document.getElementById('admin-qr-url').value = appSettings.qrUrl || './qr.png';
-            
-            updatePricePreview();
         }
 
         window.updateAdminSettings = () => {
             const mode = document.getElementById('admin-rate-mode').value;
             const updates = {};
-            
-            // Save mode
             updates['market/mode'] = mode;
-            updates['market/autoRange'] = parseFloat(document.getElementById('admin-auto-range').value) || 50;
+            updates['market/autoRange'] = parseFloat(document.getElementById('admin-auto-range').value) || 100;
             updates['market/autoInterval'] = parseFloat(document.getElementById('admin-auto-interval').value) || 30;
             
             if (mode === 'manual') {
-                // Manual mode: save TK price and USDT rate
                 updates['market/tkPrice'] = parseFloat(document.getElementById('admin-tk-price').value);
                 updates['market/usdtRate'] = parseFloat(document.getElementById('admin-usdt-rate').value);
-                updates['market/basePrice'] = null; // Clear base price
-            } else {
-                // Auto mode: save base price and calculate internal rates
-                const basePrice = parseFloat(document.getElementById('admin-base-price').value) || 280;
-                const usdtRate = parseFloat(document.getElementById('admin-usdt-rate').value) || 280;
-                
-                updates['market/basePrice'] = basePrice;
-                updates['market/usdtRate'] = usdtRate;
-                updates['market/tkPrice'] = basePrice / usdtRate; // Internal TK price
             }
             
-            // Save other settings
             updates['settings/minTransfer'] = parseFloat(document.getElementById('admin-min-transfer').value) || 10;
             updates['settings/transferTax'] = (parseFloat(document.getElementById('admin-transfer-tax').value) || 2) / 100;
             updates['settings/minDeposit'] = parseFloat(document.getElementById('admin-min-deposit').value) || 500;
@@ -1013,8 +853,7 @@
             updates['settings/qrUrl'] = document.getElementById('admin-qr-url').value;
 
             update(ref(db), updates).then(() => {
-                window.showToast("Settings Updated Successfully!");
-                updatePricePreview();
+                showToast("Settings Updated");
             });
         }
 
@@ -1055,7 +894,7 @@
                 updates['users/' + uid + '/balanceTK'] = curBal + amount;
                 updates['deposits/' + key + '/status'] = 'approved';
                 update(ref(db), updates).then(() => {
-                    window.showToast("Deposit Approved");
+                    showToast("Deposit Approved");
                 });
             });
         };
@@ -1064,7 +903,7 @@
             update(ref(db, 'deposits/' + key), {
                 status: 'rejected'
             }).then(() => {
-                window.showToast("Deposit Rejected");
+                showToast("Deposit Rejected");
             });
         };
         
@@ -1117,20 +956,20 @@
             update(ref(db, 'withdrawals/' + key), {
                 status: 'approved'
             }).then(() => {
-                window.showToast("Withdrawal Approved");
+                showToast("Withdrawal Approved");
             });
         };
 
         window.rejectWithdraw = (key, uid, totalRefundAmount) => {
             get(ref(db, 'users/' + uid)).then(snap => {
-                if(!snap.exists()) return window.showToast("User not found", "error");
+                if(!snap.exists()) return showToast("User not found", "error");
                 const curBal = snap.val().balanceTK;
                 const newBal = curBal + totalRefundAmount;
                 const updates = {};
                 updates['users/' + uid + '/balanceTK'] = newBal;
                 updates['withdrawals/' + key + '/status'] = 'rejected';
                 update(ref(db), updates).then(() => {
-                    window.showToast("Withdrawal Rejected & Refunded");
+                    showToast("Withdrawal Rejected & Refunded");
                 });
             });
         };
@@ -1187,13 +1026,13 @@
 
         window.banUser = (uid, isAlreadyBanned) => {
             if(isAlreadyBanned) {
-                window.showToast("User is already banned", "error");
+                showToast("User is already banned", "error");
                 return;
             }
             if(confirm("Are you sure you want to ban this user?")) {
                 update(ref(db, 'users/' + uid), {
                     isBanned: true
-                }).then(() => window.showToast("User Banned"));
+                }).then(() => showToast("User Banned"));
             }
         }
 
@@ -1205,7 +1044,7 @@
                         title: title,
                         date: new Date().toLocaleDateString()
                     }).then(() => {
-                        window.showToast("News Posted (Old Deleted)");
+                        showToast("News Posted (Old Deleted)");
                         document.getElementById('admin-news-headline').value = "";
                     });
                 });
