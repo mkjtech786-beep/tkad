@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TK Coin - Admin Panel</title>
+    <style>
+        :root {
+            --primary: #ff6600;
+            --primary-dark: #cc5200;
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --text-light: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --success: #00c853;
+            --danger: #ff3d00;
+            --blue: #2979ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow-x: hidden;
+            padding-bottom: 20px;
+        }
+
+        .hidden { display: none !important; }
+        .text-orange { color: var(--primary); }
+        .text-green { color: var(--success); }
+        .text-blue { color: var(--blue); }
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .btn:disabled { background: #555; cursor: not-allowed; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; width: auto; }
+        
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem; }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 6px;
+            outline: none;
+        }
+        .input-group input:focus { border-color: var(--primary); }
+
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .toast {
+            background: var(--bg-card);
+            border-left: 4px solid var(--primary);
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        header {
+            background: var(--bg-card);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo { font-size: 1.2rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 5px; }
+        
+        .section { padding: 15px; max-width: 600px; margin: 0 auto; }
+        
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .menu-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid #333;
+        }
+        .menu-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .menu-icon { font-size: 1.5rem; margin-bottom: 10px; display: block; }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 70vh;
+        }
+        .chat-user-list {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid #333;
+        }
+        .chat-user-item {
+            padding: 10px;
+            background: #2a2a2a;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-user-item:hover { background: var(--primary); }
+        
+        .unread-badge {
+            color: #ff0000;
+            font-size: 10px;
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-color: #ff0000;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+
+        .chat-box {
+            flex: 2;
+            background: var(--bg-card);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #333;
+        }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 80%; padding: 8px 12px; border-radius: 10px; font-size: 0.9rem; word-wrap: break-word;}
+        .msg-admin { align-self: flex-start; background: #333; color: white; }
+        .msg-user { align-self: flex-end; background: var(--primary); color: white; }
+        .chat-input-area { padding: 10px; display: flex; gap: 10px; border-top: 1px solid #333; }
+
+        .admin-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+            font-size: 0.85rem;
+            min-width: 500px;
+        }
+        .admin-table th, .admin-table td { 
+            text-align: left; 
+            padding: 8px; 
+            border-bottom: 1px solid #333; 
+            white-space: nowrap;
+        }
+        .admin-table th { color: var(--primary); }
+        .status-badge { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
+        .status-pending { background: #ff9800; color: black; }
+        .status-approved { background: #00c853; color: white; }
+        .status-rejected { background: #ff3d00; color: white; }
+        .status-banned { background: #333; color: red; border: 1px solid red; }
+        .status-active { background: #00c853; color: white; }
+        .status-matured { background: var(--blue); color: white; }
+
+        .settings-divider {
+            margin: 20px 0 10px 0;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .online-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #00ff00;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulseOnline 1.5s infinite;
+            box-shadow: 0 0 5px #00ff00;
+        }
+
+        @keyframes pulseOnline {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @media (max-width: 600px) {
+            .admin-table { font-size: 0.75rem; }
+            .admin-table th, .admin-table td { padding: 6px 4px; }
+            .btn-sm { padding: 4px 8px; font-size: 0.7rem; }
+            .online-indicator { width: 6px; height: 6px; }
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+        .summary-card h4 {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        .summary-card .amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .profit { color: var(--success); }
+        .loss { color: var(--danger); }
+
+        .credentials-box {
+            background: #2a2a2a;
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .credential-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #444;
+        }
+        .credential-item:last-child { border-bottom: none; }
+        .credential-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .credential-value {
+            color: var(--text-light);
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+        .copy-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+        .copy-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <div id="app-container" class="hidden">
+        <header>
+            <div class="logo">
+                <i class="fas fa-user-shield"></i> TK Admin
+            </div>
+        </header>
+
+        <main id="admin-views">
+            <section id="view-admin-dashboard" class="section">
+                <h2 class="text-orange">Admin Dashboard</h2>
+                
+                <div class="menu-grid" style="margin-top: 20px;">
+                    <div class="menu-card" onclick="window.showAdminSection('market')">
+                        <span class="menu-icon text-orange"><i class="fas fa-cogs"></i></span>
+                        <div>Settings</div>
+                    </div>
+                    <div class="menu-card" onclick="window.showAdminSection('deposits')">
+                        <span class="menu-icon text-green"><i class="fas fa-check-double"></i></span>
+                        <div>Deposits <span id="admin-dep-pending-count" class="badge" style="background:red; padding:2px 5px; border-radius:50%; font-size:0.7rem; color:white;">0</span></div>
+                    </div>
+                    <div class="menu-card" onclick="window.showAdminSection('withdrawals')">
+                        <span class="menu-icon text-blue"><i class="fas fa-money-bill-wave"></i></span>
+                        <div>Withdrawals <span id="admin-with-pending-count" class="badge" style="background:red; padding:2px 5px; border-radius:50%; font-size:0.7rem; color:white;">0</span></div>
+                    </div>
+                    <div class="menu-card" onclick="window.showAdminSection('users')">
+                        <span class="menu-icon text-blue"><i class="fas fa-users"></i></span>
+                        <div>Users</div>
+                    </div>
+                    <div class="menu-card" onclick="window.showAdminSection('news')">
+                        <span class="menu-icon"><i class="fas fa-newspaper"></i></span>
+                        <div>News</div>
+                    </div>
+                    <div class="menu-card" onclick="window.showAdminSection('summary')">
+                        <span class="menu-icon text-orange"><i class="fas fa-chart-pie"></i></span>
+                        <div>Summary</div>
+                    </div>
+                    <div class="menu-card" onclick="window.showAdminSection('savings')">
+                        <span class="menu-icon text-green"><i class="fas fa-piggy-bank"></i></span>
+                        <div>Savings</div>
+                    </div>
+                </div>
+
+                <div class="menu-card" onclick="window.showAdminSection('chat')" style="text-align: left; margin-bottom: 20px;">
+                    <span class="menu-icon"><i class="fas fa-comments"></i></span>
+                    <div>Live Support Chats</div>
+                </div>
+            </section>
+
+            <!-- Admin: Market & Settings -->
+            <section id="admin-market" class="section hidden">
+                <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
+                <h3 class="text-orange" style="margin-top: 15px;">App Settings</h3>
+                
+                <div class="input-group">
+                    <label>Rate Mode</label>
+                    <select id="admin-rate-mode" onchange="window.toggleRateMode()">
+                        <option value="manual">Manual</option>
+                        <option value="auto">Auto</option>
+                    </select>
+                </div>
+
+                <div id="manual-controls">
+                    <div class="input-group">
+                        <label>TK Price (USDT) - Internal Rate</label>
+                        <input type="number" id="admin-tk-price" step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label>USDT to PKR Rate (For Display)</label>
+                        <input type="number" id="admin-usdt-rate" step="0.01">
+                    </div>
+                </div>
+
+                <div id="auto-controls" class="hidden">
+                    <div class="input-group">
+                        <label>Fluctuation Range (PKR)</label>
+                        <input type="number" id="admin-auto-range" value="100" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Update Interval (seconds)</label>
+                        <input type="number" id="admin-auto-interval" value="30" step="1">
+                    </div>
+                </div>
+
+                <div class="settings-divider">Transfer Settings</div>
+                <div class="input-group">
+                    <label>Minimum Transfer (TK)</label>
+                    <input type="number" id="admin-min-transfer" step="1" value="10">
+                </div>
+                <div class="input-group">
+                    <label>Transfer Tax (%)</label>
+                    <input type="number" id="admin-transfer-tax" step="0.1" value="2">
+                </div>
+
+                <div class="settings-divider">Deposit Settings</div>
+                <div class="input-group">
+                    <label>Minimum Deposit (PKR)</label>
+                    <input type="number" id="admin-min-deposit" step="10" value="500">
+                </div>
+
+                <div class="settings-divider">Wallet Settings</div>
+                <div class="input-group">
+                    <label>Minimum Withdraw (TK)</label>
+                    <input type="number" id="admin-min-withdraw">
+                </div>
+                <div class="input-group">
+                    <label>Withdraw Fee (%)</label>
+                    <input type="number" id="admin-withdraw-fee" step="0.01">
+                </div>
+
+                <div class="settings-divider">Deposit Details</div>
+                <div class="input-group">
+                    <label>Easypaisa Number</label>
+                    <input type="text" id="admin-easypaisa">
+                </div>
+                <div class="input-group">
+                    <label>JazzCash Number</label>
+                    <input type="text" id="admin-jazzcash">
+                </div>
+                <div class="input-group">
+                    <label>Till ID (Raast)</label>
+                    <input type="text" id="admin-tillid">
+                </div>
+                <div class="input-group">
+                    <label>QR Code Image URL</label>
+                    <input type="text" id="admin-qr-url" placeholder="./qr.png">
+                </div>
+
+                <!-- Savings Settings -->
+                <div class="settings-divider">Savings Settings</div>
+                <div class="input-group">
+                    <label>30 Days Profit (%)</label>
+                    <input type="number" id="admin-savings-30" step="0.1" value="2.0">
+                </div>
+                <div class="input-group">
+                    <label>60 Days Profit (%)</label>
+                    <input type="number" id="admin-savings-60" step="0.1" value="3.0">
+                </div>
+                <div class="input-group">
+                    <label>90 Days Profit (%)</label>
+                    <input type="number" id="admin-savings-90" step="0.1" value="4.0">
+                </div>
+                <div class="input-group">
+                    <label>Minimum Savings Amount (PKR)</label>
+                    <input type="number" id="admin-min-savings" step="100" value="1000">
+                </div>
+                <div style="background: rgba(255,102,0,0.1); border: 1px solid var(--primary); padding: 10px; border-radius: 6px; margin: 15px 0; font-size: 0.85rem; color: var(--text-muted);">
+                    <i class="fas fa-info-circle"></i> Daily profit will be auto-calculated and credited to user wallets based on these percentages.
+                </div>
+
+                <button class="btn" onclick="window.updateAdminSettings()">Save All Settings</button>
+            </section>
+
+            <!-- Admin: Deposits -->
+            <section id="admin-deposits" class="section hidden">
+                <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
+                <h3 class="text-orange" style="margin-top: 15px;">Deposit Approvals</h3>
+                <div style="overflow-x: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr><th>User</th><th>Method</th><th>Amount</th><th>Ref</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="admin-deposit-list"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Admin: Withdrawals -->
+            <section id="admin-withdrawals" class="section hidden">
+                <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
+                <h3 class="text-orange" style="margin-top: 15px;">Withdrawal Requests</h3>
+                <div style="overflow-x: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr><th>User</th><th>Method</th><th>Amount</th><th>Total</th><th>View</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="admin-withdraw-list"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Admin: Users -->
+            <section id="admin-users" class="section hidden">
+                <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
+                <h3 class="text-orange" style="margin-top: 15px;">User Management</h3>
+                <div style="overflow-x: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr><th>Name</th><th>Email</th><th>Balance</th><th>Active</th><th>View</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="admin-user-list"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Admin: Summary -->
+            <section id="admin-summary" class="section hidden">
+                <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
+                <h3 class="text-orange" style="margin-top: 15px;">Financial Summary</h3>
+                
+                <div class="summary-grid" style="margin-top: 20px;">
+                    <div class="summary-card">
+                        <h4><i class="fas fa-arrow-down text-green"></i> Total Approved Deposits</h4>
+                        <div class="amount text-green" id="total-deposits-pkr">Rs. 0</div>
+                        <small style="color: var(--text-muted);" id="total-deposits-tk">0 TK</small>
+                    </div>
+                    <div class="summary-card">
+                        <h4><i class="fas fa-arrow-up text-danger"></i> Total Approved Withdrawals</h4>
+                        <div class="amount text-danger" id="total-withdrawals-pkr">Rs. 0</div>
+                        <small style="color: var(--text-muted);" id="total-withdrawals-tk">0 TK</small>
+                    </div>
+                </div>
+
+                <div class="summary-card" style="margin-bottom: 20px;">
+                    <h4>Net Profit/Loss</h4>
+                    <div class="amount" id="net-profit-loss">Rs. 0</div>
+                    <small style="color: var(--text-muted);">Deposits - Withdrawals</small>
+                </div>
+
+                <h3 class="text-orange" style="margin: 20px 0 15px 0;">User-wise Profit/Loss (PKR)</h3>
+                <div style="overflow-x: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr><th>User</th><th>Total Deposits</th><th>Total Withdrawals</th><th>Profit/Loss</th></tr>
+                        </thead>
+                        <tbody id="user-profit-loss-list"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Admin: Savings Management -->
+            <section id="admin-savings" class="section hidden">
+                <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
+                <h3 class="text-orange" style="margin-top: 15px;"><i class="fas fa-piggy-bank"></i> Savings Management</h3>
+                
+                <div class="summary-grid" style="margin-top: 20px;">
+                    <div class="summary-card">
+                        <h4>Total Active Savings</h4>
+                        <div class="amount text-orange" id="admin-total-savings-pkr">Rs. 0</div>
+                        <small style="color: var(--text-muted);" id="admin-total-savings-count">0 Active Plans</small>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Total Profit Distributed</h4>
+                        <div class="amount text-green" id="admin-total-profit">Rs. 0</div>
+                        <small style="color: var(--text-muted);">Lifetime</small>
+                    </div>
+                </div>
+
+                <h3 class="text-orange" style="margin: 20px 0 15px 0;">Active Savings Plans</h3>
+                <div style="overflow-x: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr><th>User</th><th>Amount</th><th>Plan</th><th>Start Date</th><th>Maturity</th><th>Status</th><th>Profit</th></tr>
+                        </thead>
+                        <tbody id="admin-savings-list"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Admin: News -->
+            <section id="admin-news" class="section hidden">
+                <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
+                <h3 class="text-orange" style="margin-top: 15px;">Post News</h3>
+                <p style="color:#777; font-size:0.8rem; margin-bottom:10px;">Posting this will delete old news.</p>
+                <div class="input-group">
+                    <label>Headline</label>
+                    <input type="text" id="admin-news-headline">
+                </div>
+                <button class="btn" onclick="window.postNews()">Post Update</button>
+            </section>
+
+            <!-- Admin: Chat -->
+            <section id="admin-chat" class="section hidden">
+                <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
+                <h3 class="text-orange" style="margin-top: 15px;">User Chats <small style="color:red; font-size:0.7rem;">(Real-time)</small></h3>
+                <div class="chat-container">
+                    <div id="admin-chat-list" class="chat-user-list"></div>
+                    <div id="admin-chat-window" class="chat-box hidden">
+                        <div style="padding:10px; border-bottom: 1px solid #333; background:var(--bg-card);">
+                            Chatting with: <strong id="chatting-with-name" class="text-orange">--</strong>
+                        </div>
+                        <div class="chat-messages" id="admin-chat-messages"></div>
+                        <div class="chat-input-area">
+                            <input type="text" id="admin-chat-input" placeholder="Reply...">
+                            <button class="btn btn-sm" onclick="window.adminSendReply()">Reply</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Withdrawal Details Modal -->
+            <div id="withdraw-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; display:flex; justify-content:center; align-items:center;">
+                <div style="background:var(--bg-card); border:1px solid #333; border-radius:12px; padding:20px; max-width:400px; width:90%; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
+                        <h3 class="text-orange" style="margin:0;">Withdrawal Details</h3>
+                        <button onclick="window.closeWithdrawModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <label style="color:var(--text-muted); font-size:0.8rem;">User</label>
+                        <div id="modal-user" style="font-size:1rem; color:var(--text-light);"></div>
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <label style="color:var(--text-muted); font-size:0.8rem;">Method</label>
+                        <div id="modal-method" style="font-size:1rem; color:var(--text-light);"></div>
+                    </div>
+                    <div style="margin-bottom:15px; background:#2a2a2a; padding:15px; border-radius:8px; border:1px solid var(--primary);">
+                        <label style="color:var(--primary); font-size:0.8rem; font-weight:bold;"><i class="fas fa-university"></i> Account Number</label>
+                        <div id="modal-account" style="font-size:1.2rem; color:var(--text-light); font-weight:bold; margin-top:5px; word-break:break-all;"></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
+                        <div>
+                            <label style="color:var(--text-muted); font-size:0.8rem;">Amount</label>
+                            <div id="modal-amount" style="font-size:1rem; color:var(--text-light);"></div>
+                        </div>
+                        <div>
+                            <label style="color:var(--text-muted); font-size:0.8rem;">Total</label>
+                            <div id="modal-total" style="font-size:1rem; color:var(--primary); font-weight:bold;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button id="modal-approve-btn" class="btn" style="flex:1; background:var(--success);"><i class="fas fa-check"></i> Approve</button>
+                        <button id="modal-reject-btn" class="btn" style="flex:1; background:var(--danger);"><i class="fas fa-times"></i> Reject</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Credentials Modal -->
+            <div id="credentials-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; display:flex; justify-content:center; align-items:center;">
+                <div style="background:var(--bg-card); border:1px solid #333; border-radius:12px; padding:20px; max-width:400px; width:90%; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
+                        <h3 class="text-orange" style="margin:0;"><i class="fas fa-user-lock"></i> User Credentials</h3>
+                        <button onclick="window.closeCredentialsModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <label style="color:var(--text-muted); font-size:0.8rem;">User Name</label>
+                        <div id="cred-name" style="font-size:1.1rem; color:var(--text-light); font-weight:bold;"></div>
+                    </div>
+                    <div class="credentials-box">
+                        <div class="credential-item">
+                            <span class="credential-label"><i class="fas fa-envelope"></i> Email</span>
+                            <div style="display:flex; align-items:center;">
+                                <span class="credential-value" id="cred-email"></span>
+                                <button class="copy-btn" onclick="window.copyToClipboard('cred-email')">Copy</button>
+                            </div>
+                        </div>
+                        <div class="credential-item">
+                            <span class="credential-label"><i class="fas fa-key"></i> Password</span>
+                            <div style="display:flex; align-items:center;">
+                                <span class="credential-value" id="cred-password" style="color:var(--primary);"></span>
+                                <button class="copy-btn" onclick="window.copyToClipboard('cred-password')">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background:#1a1a1a; padding:10px; border-radius:6px; margin-top:15px; border-left:3px solid var(--success);">
+                        <small style="color:var(--text-muted);">
+                            <i class="fas fa-info-circle"></i> Use these credentials to login as this user for support purposes.
+                        </small>
+                    </div>
+                    <button class="btn" onclick="window.closeCredentialsModal()" style="margin-top:20px;">Close</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, update, get, set } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBMk5ED0YNL9MqVThgMhoOuWvGwTgCJCg",
+            authDomain: "injector-c964a.firebaseapp.com",
+            databaseURL: "https://injector-c964a-default-rtdb.firebaseio.com",
+            projectId: "injector-c964a",
+            storageBucket: "injector-c964a.firebasestorage.app",
+            messagingSenderId: "746006402839",
+            appId: "1:746006402839:web:26d14a3fee7d6e6cc68952",
+            measurementId: "G-DBMSEZZWW1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let marketData = { tkPrice: 1.50, usdtRate: 280 };
+        let appSettings = { minWithdraw: 50, withdrawFee: 0.05 }; 
+        let adminSelectedChatUser = null; 
+
+        window.showToast = (msg, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.borderLeftColor = type === 'error' ? 'var(--danger)' : 'var(--primary)';
+            toast.innerText = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        window.toggleRateMode = () => {
+            const mode = document.getElementById('admin-rate-mode').value;
+            const manualControls = document.getElementById('manual-controls');
+            const autoControls = document.getElementById('auto-controls');
+            
+            if (mode === 'auto') {
+                manualControls.classList.add('hidden');
+                autoControls.classList.remove('hidden');
+            } else {
+                manualControls.classList.remove('hidden');
+                autoControls.classList.add('hidden');
+            }
+        }
+
+        window.viewWithdrawDetails = (key, userEmail, method, account, amount, total, userId) => {
+            document.getElementById('modal-user').innerText = userEmail || 'Unknown';
+            document.getElementById('modal-method').innerText = method || 'Unknown';
+            document.getElementById('modal-account').innerText = account || 'Not Provided';
+            document.getElementById('modal-amount').innerText = (amount || 0).toFixed(2) + ' TK';
+            document.getElementById('modal-total').innerText = (total || 0).toFixed(2) + ' TK';
+            
+            document.getElementById('modal-approve-btn').onclick = () => {
+                window.approveWithdraw(key);
+                window.closeWithdrawModal();
+            };
+            
+            document.getElementById('modal-reject-btn').onclick = () => {
+                window.rejectWithdraw(key, userId, total);
+                window.closeWithdrawModal();
+            };
+            
+            document.getElementById('withdraw-modal').classList.remove('hidden');
+        }
+
+        window.closeWithdrawModal = () => {
+            document.getElementById('withdraw-modal').classList.add('hidden');
+        }
+
+        window.viewUserCredentials = (name, email, password) => {
+            document.getElementById('cred-name').innerText = name || 'Unknown User';
+            document.getElementById('cred-email').innerText = email || 'N/A';
+            document.getElementById('cred-password').innerText = password || 'N/A';
+            document.getElementById('credentials-modal').classList.remove('hidden');
+        }
+
+        window.closeCredentialsModal = () => {
+            document.getElementById('credentials-modal').classList.add('hidden');
+        }
+
+        window.copyToClipboard = (elementId) => {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Copied to clipboard!');
+            }).catch(() => {
+                showToast('Failed to copy', 'error');
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            const withdrawModal = document.getElementById('withdraw-modal');
+            const credModal = document.getElementById('credentials-modal');
+            if (e.target === withdrawModal) window.closeWithdrawModal();
+            if (e.target === credModal) window.closeCredentialsModal();
+        });
+
+        function initApp() {
+            document.getElementById('app-container').classList.remove('hidden');
+
+            onValue(ref(db, 'market'), (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    marketData = data;
+                    document.getElementById('admin-rate-mode').value = data.mode || 'manual';
+                    document.getElementById('admin-auto-range').value = data.autoRange || 100;
+                    document.getElementById('admin-auto-interval').value = data.autoInterval || 30;
+                    toggleRateMode();
+                }
+            });
+
+            onValue(ref(db, 'settings'), (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    appSettings.minWithdraw = data.minWithdraw || 50;
+                    appSettings.withdrawFee = data.withdrawFee || 0.05;
+                    appSettings.easypaisa = data.easypaisa || '0300-1234567';
+                    appSettings.jazzcash = data.jazzcash || '0321-7654321';
+                    appSettings.tillid = data.tillid || '03XX-XXXXXXX (Raast)';
+                    appSettings.minTransfer = data.minTransfer || 10;
+                    appSettings.transferTax = data.transferTax || 0.02;
+                    appSettings.minDeposit = data.minDeposit || 500;
+                    appSettings.savings30 = data.savings30 || 2.0;
+                    appSettings.savings60 = data.savings60 || 3.0;
+                    appSettings.savings90 = data.savings90 || 4.0;
+                    appSettings.minSavings = data.minSavings || 1000;
+                }
+            });
+        }
+
+        window.showAdminSection = (sectionId) => {
+            document.querySelectorAll('#admin-views .section').forEach(el => el.classList.add('hidden'));
+            if(sectionId === 'dashboard') document.getElementById('view-admin-dashboard').classList.remove('hidden');
+            else document.getElementById(`admin-${sectionId}`).classList.remove('hidden');
+            if (sectionId === 'deposits') loadAdminDeposits();
+            if (sectionId === 'withdrawals') loadAdminWithdrawals();
+            if (sectionId === 'users') loadAdminUsers();
+            if (sectionId === 'market') loadAdminMarket();
+            if (sectionId === 'chat') loadAdminChatList();
+            if (sectionId === 'summary') loadSummaryData();
+            if (sectionId === 'savings') loadAdminSavings();
+        };
+
+        function loadAdminMarket() {
+            document.getElementById('admin-tk-price').value = marketData.tkPrice || 1.50;
+            document.getElementById('admin-usdt-rate').value = marketData.usdtRate || 280;
+            document.getElementById('admin-rate-mode').value = marketData.mode || 'manual';
+            document.getElementById('admin-auto-range').value = marketData.autoRange || 100;
+            document.getElementById('admin-auto-interval').value = marketData.autoInterval || 30;
+            
+            document.getElementById('admin-min-transfer').value = appSettings.minTransfer || 10;
+            document.getElementById('admin-transfer-tax').value = (appSettings.transferTax * 100) || 2;
+            document.getElementById('admin-min-deposit').value = appSettings.minDeposit || 500;
+            
+            document.getElementById('admin-savings-30').value = appSettings.savings30 || 2.0;
+            document.getElementById('admin-savings-60').value = appSettings.savings60 || 3.0;
+            document.getElementById('admin-savings-90').value = appSettings.savings90 || 4.0;
+            document.getElementById('admin-min-savings').value = appSettings.minSavings || 1000;
+            
+            toggleRateMode();
+            document.getElementById('admin-min-withdraw').value = appSettings.minWithdraw || 50;
+            document.getElementById('admin-withdraw-fee').value = (appSettings.withdrawFee * 100) || 5;
+            document.getElementById('admin-easypaisa').value = appSettings.easypaisa || '0300-1234567';
+            document.getElementById('admin-jazzcash').value = appSettings.jazzcash || '0321-7654321';
+            document.getElementById('admin-tillid').value = appSettings.tillid || '03XX-XXXXXXX (Raast)';
+            document.getElementById('admin-qr-url').value = appSettings.qrUrl || './qr.png';
+        }
+
+        window.updateAdminSettings = () => {
+            const mode = document.getElementById('admin-rate-mode').value;
+            const updates = {};
+            updates['market/mode'] = mode;
+            updates['market/autoRange'] = parseFloat(document.getElementById('admin-auto-range').value) || 100;
+            updates['market/autoInterval'] = parseFloat(document.getElementById('admin-auto-interval').value) || 30;
+            
+            if (mode === 'manual') {
+                updates['market/tkPrice'] = parseFloat(document.getElementById('admin-tk-price').value);
+                updates['market/usdtRate'] = parseFloat(document.getElementById('admin-usdt-rate').value);
+            }
+            
+            updates['settings/minTransfer'] = parseFloat(document.getElementById('admin-min-transfer').value) || 10;
+            updates['settings/transferTax'] = (parseFloat(document.getElementById('admin-transfer-tax').value) || 2) / 100;
+            updates['settings/minDeposit'] = parseFloat(document.getElementById('admin-min-deposit').value) || 500;
+            
+            updates['settings/savings30'] = parseFloat(document.getElementById('admin-savings-30').value) || 2.0;
+            updates['settings/savings60'] = parseFloat(document.getElementById('admin-savings-60').value) || 3.0;
+            updates['settings/savings90'] = parseFloat(document.getElementById('admin-savings-90').value) || 4.0;
+            updates['settings/minSavings'] = parseFloat(document.getElementById('admin-min-savings').value) || 1000;
+            
+            updates['settings/minWithdraw'] = parseFloat(document.getElementById('admin-min-withdraw').value);
+            updates['settings/withdrawFee'] = parseFloat(document.getElementById('admin-withdraw-fee').value) / 100;
+            updates['settings/easypaisa'] = document.getElementById('admin-easypaisa').value;
+            updates['settings/jazzcash'] = document.getElementById('admin-jazzcash').value;
+            updates['settings/tillid'] = document.getElementById('admin-tillid').value;
+            updates['settings/qrUrl'] = document.getElementById('admin-qr-url').value;
+
+            update(ref(db), updates).then(() => {
+                showToast("Settings Updated");
+            });
+        }
+
+        function loadAdminDeposits() {
+            const list = document.getElementById('admin-deposit-list');
+            onValue(ref(db, 'deposits'), (snapshot) => {
+                const data = snapshot.val();
+                list.innerHTML = "";
+                if(data) {
+                    let count = 0;
+                    Object.keys(data).forEach((key) => {
+                        const item = data[key];
+                        if(item.status === 'pending') count++;
+                        list.innerHTML += `
+                            <tr>
+                                <td>${item.userEmail}</td>
+                                <td>${item.method}</td>
+                                <td>${item.amount.toFixed(2)} TK</td>
+                                <td>${item.ref}</td>
+                                <td>
+                                    ${item.status === 'pending' ? `
+                                    <button class="btn btn-sm" style="background:var(--success)" onclick="window.approveDep('${key}', '${item.userId}', ${item.amount})"><i class="fas fa-check"></i></button>
+                                    <button class="btn btn-sm" style="background:var(--danger)" onclick="window.rejectDep('${key}')"><i class="fas fa-times"></i></button>
+                                    ` : `<span class="status-badge status-${item.status}">${item.status}</span>`}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('admin-dep-pending-count').innerText = count;
+                }
+            });
+        }
+
+        window.approveDep = (key, uid, amount) => {
+            const updates = {};
+            get(ref(db, 'users/' + uid)).then(snap => {
+                const curBal = snap.val().balanceTK;
+                updates['users/' + uid + '/balanceTK'] = curBal + amount;
+                updates['deposits/' + key + '/status'] = 'approved';
+                update(ref(db), updates).then(() => {
+                    showToast("Deposit Approved");
+                });
+            });
+        };
+        
+        window.rejectDep = (key) => {
+            update(ref(db, 'deposits/' + key), {
+                status: 'rejected'
+            }).then(() => {
+                showToast("Deposit Rejected");
+            });
+        };
+        
+        function loadAdminWithdrawals() {
+            const list = document.getElementById('admin-withdraw-list');
+            if(!list) return;
+
+            onValue(ref(db, 'withdrawals'), (snapshot) => {
+                const data = snapshot.val();
+                list.innerHTML = "";
+                if (!data) {
+                    list.innerHTML = "<tr><td colspan='6' style='text-align:center; color:#777;'>No requests found.</td></tr>";
+                    document.getElementById('admin-with-pending-count').innerText = 0;
+                    return;
+                }
+
+                let count = 0;
+                let html = "";
+
+                Object.keys(data).forEach((key) => {
+                    const item = data[key];
+                    if(!item) return;
+                    if (item.status === 'pending') count++;
+
+                    html += `
+                        <tr>
+                            <td>${item.userEmail || 'Unknown'}</td>
+                            <td>${item.method || 'Unknown'}</td>
+                            <td>${(item.amount || 0).toFixed(2)}</td>
+                            <td>${(item.total || 0).toFixed(2)}</td>
+                            <td>
+                                <button class="btn btn-sm" style="background:var(--blue)" onclick="window.viewWithdrawDetails('${key}', '${item.userEmail}', '${item.method}', '${item.account}', ${item.amount}, ${item.total}, '${item.userId}')"><i class="fas fa-eye"></i></button>
+                            </td>
+                            <td>
+                                ${item.status === 'pending' ? `
+                                    <button class="btn btn-sm" style="background:var(--success)" onclick="window.approveWithdraw('${key}')"><i class="fas fa-check"></i></button>
+                                    <button class="btn btn-sm" style="background:var(--danger)" onclick="window.rejectWithdraw('${key}', '${item.userId}', ${item.total})"><i class="fas fa-times"></i></button>
+                                ` : `<span class="status-badge status-${item.status}">${item.status}</span>`}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                list.innerHTML = html;
+                document.getElementById('admin-with-pending-count').innerText = count;
+            });
+        }
+
+        window.approveWithdraw = (key) => {
+            update(ref(db, 'withdrawals/' + key), {
+                status: 'approved'
+            }).then(() => {
+                showToast("Withdrawal Approved");
+            });
+        };
+
+        window.rejectWithdraw = (key, uid, totalRefundAmount) => {
+            get(ref(db, 'users/' + uid)).then(snap => {
+                if(!snap.exists()) return showToast("User not found", "error");
+                const curBal = snap.val().balanceTK;
+                const newBal = curBal + totalRefundAmount;
+                const updates = {};
+                updates['users/' + uid + '/balanceTK'] = newBal;
+                updates['withdrawals/' + key + '/status'] = 'rejected';
+                update(ref(db), updates).then(() => {
+                    showToast("Withdrawal Rejected & Refunded");
+                });
+            });
+        };
+        
+        function loadAdminUsers() {
+            const list = document.getElementById('admin-user-list');
+            onValue(ref(db, 'users'), (snapshot) => {
+                const data = snapshot.val();
+                list.innerHTML = "";
+                if(data) {
+                    Object.keys(data).forEach((uid) => {
+                        const u = data[uid];
+                        const isBanned = u.isBanned || false;
+                        const banBtnStyle = isBanned ? "background:#555; cursor:not-allowed" : "background:var(--danger)";
+                        const banText = isBanned ? "Banned" : "Ban Account";
+                        
+                        let activeStatus = '<span style="color:#777;">Never</span>';
+                        if(u.lastActive) {
+                            const lastActive = new Date(u.lastActive).getTime();
+                            const now = Date.now();
+                            const diffMin = Math.floor((now - lastActive) / 60000);
+                            
+                            if(diffMin < 1) {
+                                activeStatus = '<span class="online-indicator"></span> Online';
+                            } else if(diffMin < 60) {
+                                activeStatus = `<span style="color:#FFD700;">${diffMin} min ago</span>`;
+                            } else if(diffMin < 1440) {
+                                activeStatus = `<span style="color:#FFA500;">${Math.floor(diffMin/60)}h ago</span>`;
+                            } else {
+                                activeStatus = `<span style="color:#777;">${Math.floor(diffMin/1440)}d ago</span>`;
+                            }
+                        }
+
+                        list.innerHTML += `
+                            <tr>
+                                <td>${u.name}</td>
+                                <td>${u.email}</td>
+                                <td>${u.balanceTK}</td>
+                                <td>${activeStatus}</td>
+                                <td>
+                                    <button class="btn btn-sm" style="background:var(--blue)" onclick="window.viewUserCredentials('${u.name}', '${u.email}', '${u.password || '---'}')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm" style="${banBtnStyle}" onclick="window.banUser('${uid}', ${isBanned})">${banText}</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+        }
+
+        window.banUser = (uid, isAlreadyBanned) => {
+            if(isAlreadyBanned) {
+                showToast("User is already banned", "error");
+                return;
+            }
+            if(confirm("Are you sure you want to ban this user?")) {
+                update(ref(db, 'users/' + uid), {
+                    isBanned: true
+                }).then(() => showToast("User Banned"));
+            }
+        }
+
+        window.postNews = () => {
+            const title = document.getElementById('admin-news-headline').value;
+            if(title) {
+                set(ref(db, 'news'), null).then(() => {
+                    push(ref(db, 'news'), {
+                        title: title,
+                        date: new Date().toLocaleDateString()
+                    }).then(() => {
+                        showToast("News Posted (Old Deleted)");
+                        document.getElementById('admin-news-headline').value = "";
+                    });
+                });
+            }
+        }
+        
+        function loadSummaryData() {
+            const usdtRate = marketData.usdtRate || 280;
+            const tkPrice = marketData.tkPrice || 1.50;
+            
+            get(ref(db, 'deposits')).then(depositSnap => {
+                const deposits = depositSnap.val() || {};
+                let totalDepositsTK = 0;
+                let userDeposits = {};
+                
+                Object.values(deposits).forEach(dep => {
+                    if (dep.status === 'approved') {
+                        totalDepositsTK += dep.amount;
+                        if (!userDeposits[dep.userId]) userDeposits[dep.userId] = 0;
+                        userDeposits[dep.userId] += dep.amount;
+                    }
+                });
+                
+                get(ref(db, 'withdrawals')).then(withdrawSnap => {
+                    const withdrawals = withdrawSnap.val() || {};
+                    let totalWithdrawalsTK = 0;
+                    let userWithdrawals = {};
+                    
+                    Object.values(withdrawals).forEach(withdraw => {
+                        if (withdraw.status === 'approved') {
+                            totalWithdrawalsTK += withdraw.total;
+                            if (!userWithdrawals[withdraw.userId]) userWithdrawals[withdraw.userId] = 0;
+                            userWithdrawals[withdraw.userId] += withdraw.total;
+                        }
+                    });
+                    
+                    const totalDepositsPKR = totalDepositsTK * usdtRate;
+                    const totalWithdrawalsPKR = totalWithdrawalsTK * usdtRate;
+                    const netProfitLoss = totalDepositsPKR - totalWithdrawalsPKR;
+                    
+                    document.getElementById('total-deposits-pkr').innerText = 'Rs. ' + totalDepositsPKR.toLocaleString('en-IN', {maximumFractionDigits: 2});
+                    document.getElementById('total-deposits-tk').innerText = totalDepositsTK.toFixed(2) + ' TK';
+                    document.getElementById('total-withdrawals-pkr').innerText = 'Rs. ' + totalWithdrawalsPKR.toLocaleString('en-IN', {maximumFractionDigits: 2});
+                    document.getElementById('total-withdrawals-tk').innerText = totalWithdrawalsTK.toFixed(2) + ' TK';
+                    
+                    const netElement = document.getElementById('net-profit-loss');
+                    netElement.innerText = 'Rs. ' + Math.abs(netProfitLoss).toLocaleString('en-IN', {maximumFractionDigits: 2});
+                    netElement.className = 'amount ' + (netProfitLoss >= 0 ? 'profit' : 'loss');
+                    
+                    loadUserProfitLoss(userDeposits, userWithdrawals, usdtRate);
+                });
+            });
+        }
+        
+        function loadUserProfitLoss(userDeposits, userWithdrawals, usdtRate) {
+            const list = document.getElementById('user-profit-loss-list');
+            list.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777;">Loading...</td></tr>';
+            
+            get(ref(db, 'users')).then(userSnap => {
+                const users = userSnap.val() || {};
+                let html = '';
+                
+                Object.keys(users).forEach(uid => {
+                    const user = users[uid];
+                    const depTK = userDeposits[uid] || 0;
+                    const withTK = userWithdrawals[uid] || 0;
+                    const depPKR = depTK * usdtRate;
+                    const withPKR = withTK * usdtRate;
+                    const profitLoss = depPKR - withPKR;
+                    
+                    if (depTK > 0 || withTK > 0) {
+                        html += `
+                            <tr>
+                                <td>${user.name || user.email || 'Unknown'}</td>
+                                <td style="color: var(--success);">Rs. ${depPKR.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                                <td style="color: var(--danger);">Rs. ${withPKR.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                                <td style="color: ${profitLoss >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: bold;">
+                                    ${profitLoss >= 0 ? '+' : '-'}Rs. ${Math.abs(profitLoss).toLocaleString('en-IN', {maximumFractionDigits: 2})}
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+                
+                if (html === '') {
+                    html = '<tr><td colspan="4" style="text-align:center; color:#777;">No transactions found</td></tr>';
+                }
+                
+                list.innerHTML = html;
+            });
+        }
+
+        function loadAdminSavings() {
+            const list = document.getElementById('admin-savings-list');
+            
+            onValue(ref(db, 'savings'), (snapshot) => {
+                const data = snapshot.val();
+                list.innerHTML = "";
+                
+                let totalSavingsPKR = 0;
+                let activeCount = 0;
+                let totalProfitDistributed = 0;
+                
+                if (data) {
+                    Object.entries(data).forEach(([key, saving]) => {
+                        if (saving.status === 'active') {
+                            totalSavingsPKR += parseFloat(saving.amountPKR);
+                            activeCount++;
+                        }
+                        totalProfitDistributed += parseFloat(saving.totalProfitEarned || 0);
+                        
+                        const startDate = new Date(saving.startDate);
+                        const maturityDate = new Date(saving.maturityDate);
+                        const now = new Date();
+                        
+                        let statusClass = 'status-active';
+                        let statusText = 'Active';
+                        
+                        if (saving.status === 'matured') {
+                            statusClass = 'status-matured';
+                            statusText = 'Matured';
+                        } else if (now > maturityDate) {
+                            statusClass = 'status-matured';
+                            statusText = 'Ready';
+                        }
+                        
+                        list.innerHTML += `
+                            <tr>
+                                <td>${saving.userName || saving.userEmail}</td>
+                                <td>Rs. ${parseFloat(saving.amountPKR).toLocaleString()}</td>
+                                <td>${saving.plan} Days</td>
+                                <td>${startDate.toLocaleDateString()}</td>
+                                <td>${maturityDate.toLocaleDateString()}</td>
+                                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                                <td style="color: var(--success);">Rs. ${(saving.totalProfitEarned || 0).toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                
+                document.getElementById('admin-total-savings-pkr').innerText = 'Rs. ' + totalSavingsPKR.toLocaleString();
+                document.getElementById('admin-total-savings-count').innerText = activeCount + ' Active Plans';
+                document.getElementById('admin-total-profit').innerText = 'Rs. ' + totalProfitDistributed.toLocaleString();
+                
+                if (list.innerHTML === '') {
+                    list.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#777;">No savings plans found</td></tr>';
+                }
+            });
+        }
+        
+        function loadAdminChatList() {
+            const list = document.getElementById('admin-chat-list');
+            list.innerHTML = '<div style="padding:10px; text-align:center; color:#777;">Loading users...</div>';
+
+            onValue(ref(db, 'users'), (snapshot) => {
+                const data = snapshot.val();
+                list.innerHTML = "";
+                if(data) {
+                    Object.keys(data).forEach((uid) => {
+                        const u = data[uid];
+                        const item = document.createElement('div');
+                        item.className = 'chat-user-item';
+                        item.id = `chat-user-${uid}`; 
+                        item.innerHTML = `<span><i class="fas fa-user-circle"></i> ${u.name}</span>`;
+                        item.onclick = () => selectAdminChatUser(uid, u.name);
+                        list.appendChild(item);
+
+                        const chatRef = ref(db, 'chats/' + uid);
+                        onValue(chatRef, (chatSnap) => {
+                            const chatData = chatSnap.val();
+                            if(chatData) {
+                                const msgKeys = Object.keys(chatData);
+                                const lastKey = msgKeys[msgKeys.length - 1];
+                                const lastMsg = chatData[lastKey];
+
+                                if(lastMsg.sender !== 'admin' && adminSelectedChatUser !== uid) {
+                                    const badgeSpan = `<span class="unread-badge"></span>`;
+                                    const existingBadge = document.getElementById(`chat-user-${uid}`).querySelector('.unread-badge');
+                                    if(!existingBadge) document.getElementById(`chat-user-${uid}`).innerHTML += badgeSpan;
+                                } else {
+                                    const existingBadge = document.getElementById(`chat-user-${uid}`).querySelector('.unread-badge');
+                                    if(existingBadge) existingBadge.remove();
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        function selectAdminChatUser(uid, name) {
+            adminSelectedChatUser = uid;
+            document.getElementById('chatting-with-name').innerText = name;
+            
+            const userItem = document.getElementById(`chat-user-${uid}`);
+            if(userItem) {
+                const badge = userItem.querySelector('.unread-badge');
+                if(badge) badge.remove();
+            }
+
+            document.getElementById('admin-chat-window').classList.remove('hidden');
+
+            const chatRef = ref(db, 'chats/' + uid);
+            onValue(chatRef, (snapshot) => {
+                const container = document.getElementById('admin-chat-messages');
+                container.innerHTML = "";
+                const data = snapshot.val();
+                
+                if (!data) {
+                    container.innerHTML = `<div style="text-align:center; color:#777; margin-top:20px;">No messages yet.</div>`;
+                    return;
+                }
+
+                Object.values(data).forEach(msg => {
+                    const div = document.createElement('div');
+                    const isAdminMsg = msg.sender === 'admin';
+                    div.className = `message ${isAdminMsg ? 'msg-admin' : 'msg-user'}`;
+                    div.innerText = msg.text;
+                    container.appendChild(div);
+                });
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
+        window.adminSendReply = () => {
+            const input = document.getElementById('admin-chat-input');
+            const text = input.value;
+            if(!text || !adminSelectedChatUser) return;
+
+            push(ref(db, 'chats/' + adminSelectedChatUser), {
+                sender: 'admin',
+                text: text,
+                timestamp: Date.now()
+            });
+            input.value = "";
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
