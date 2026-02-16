@@ -529,14 +529,23 @@
                 </div>
             </section>
 
-            <!-- Admin: Withdrawals -->
+            <!-- Admin: Withdrawals - UPDATED WITH RATE AND PKR COLUMNS -->
             <section id="admin-withdrawals" class="section hidden">
                 <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
                 <h3 class="text-orange" style="margin-top: 15px;">Withdrawal Requests</h3>
                 <div style="overflow-x: auto;">
                     <table class="admin-table">
                         <thead>
-                            <tr><th>User</th><th>Method</th><th>Amount</th><th>Total</th><th>View</th><th>Action</th></tr>
+                            <tr>
+                                <th>User</th>
+                                <th>Method</th>
+                                <th>TK Amount</th>
+                                <th>Rate</th>
+                                <th>PKR Value</th>
+                                <th>Total TK</th>
+                                <th>View</th>
+                                <th>Action</th>
+                            </tr>
                         </thead>
                         <tbody id="admin-withdraw-list"></tbody>
                     </table>
@@ -652,7 +661,7 @@
                 </div>
             </section>
 
-            <!-- Withdrawal Details Modal -->
+            <!-- Withdrawal Details Modal - UPDATED WITH RATE AND PKR FIELDS -->
             <div id="withdraw-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; display:flex; justify-content:center; align-items:center;">
                 <div style="background:var(--bg-card); border:1px solid #333; border-radius:12px; padding:20px; max-width:400px; width:90%; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
@@ -671,13 +680,26 @@
                         <label style="color:var(--primary); font-size:0.8rem; font-weight:bold;"><i class="fas fa-university"></i> Account Number</label>
                         <div id="modal-account" style="font-size:1.2rem; color:var(--text-light); font-weight:bold; margin-top:5px; word-break:break-all;"></div>
                     </div>
+                    
+                    <!-- NEW: Rate and PKR Value Display -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px; background:#1a1a1a; padding:15px; border-radius:8px; border:1px solid #444;">
+                        <div>
+                            <label style="color:var(--primary); font-size:0.8rem; font-weight:bold;"><i class="fas fa-exchange-alt"></i> Rate Applied</label>
+                            <div id="modal-rate" style="font-size:1.1rem; color:var(--text-light); font-weight:bold; margin-top:5px;"></div>
+                        </div>
+                        <div>
+                            <label style="color:var(--success); font-size:0.8rem; font-weight:bold;"><i class="fas fa-money-bill-wave"></i> PKR Value</label>
+                            <div id="modal-pkr" style="font-size:1.1rem; color:var(--success); font-weight:bold; margin-top:5px;"></div>
+                        </div>
+                    </div>
+                    
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
                         <div>
-                            <label style="color:var(--text-muted); font-size:0.8rem;">Amount</label>
+                            <label style="color:var(--text-muted); font-size:0.8rem;">TK Amount</label>
                             <div id="modal-amount" style="font-size:1rem; color:var(--text-light);"></div>
                         </div>
                         <div>
-                            <label style="color:var(--text-muted); font-size:0.8rem;">Total</label>
+                            <label style="color:var(--text-muted); font-size:0.8rem;">Total Deducted</label>
                             <div id="modal-total" style="font-size:1rem; color:var(--primary); font-weight:bold;"></div>
                         </div>
                     </div>
@@ -886,12 +908,17 @@
             }
         }
 
-        window.viewWithdrawDetails = (key, userEmail, method, account, amount, total, userId) => {
+        // UPDATED: Now accepts rate and pkrValue parameters
+        window.viewWithdrawDetails = (key, userEmail, method, account, amount, total, userId, rate, pkrValue) => {
             document.getElementById('modal-user').innerText = userEmail || 'Unknown';
             document.getElementById('modal-method').innerText = method || 'Unknown';
             document.getElementById('modal-account').innerText = account || 'Not Provided';
             document.getElementById('modal-amount').innerText = (amount || 0).toFixed(2) + ' TK';
             document.getElementById('modal-total').innerText = (total || 0).toFixed(2) + ' TK';
+            
+            // Add rate and PKR info to modal
+            document.getElementById('modal-rate').innerText = (rate || 0).toFixed(2) + ' PKR/TK';
+            document.getElementById('modal-pkr').innerText = 'Rs. ' + (pkrValue || 0).toLocaleString('en-IN', {maximumFractionDigits: 2});
             
             document.getElementById('modal-approve-btn').onclick = () => {
                 window.approveWithdraw(key);
@@ -1095,6 +1122,7 @@
             });
         };
         
+        // UPDATED: Now shows Rate and PKR Value columns
         function loadAdminWithdrawals() {
             const list = document.getElementById('admin-withdraw-list');
             if(!list) return;
@@ -1103,27 +1131,36 @@
                 const data = snapshot.val();
                 list.innerHTML = "";
                 if (!data) {
-                    list.innerHTML = "<tr><td colspan='6' style='text-align:center; color:#777;'>No requests found.</td></tr>";
+                    list.innerHTML = "<tr><td colspan='8' style='text-align:center; color:#777;'>No requests found.</td></tr>";
                     document.getElementById('admin-with-pending-count').innerText = 0;
                     return;
                 }
 
                 let count = 0;
                 let html = "";
+                
+                // Get current rate for calculations if rate not saved
+                const currentRate = marketData.usdtRate || 280;
 
                 Object.keys(data).forEach((key) => {
                     const item = data[key];
                     if(!item) return;
                     if (item.status === 'pending') count++;
+                    
+                    // Calculate PKR value
+                    const rateUsed = item.rate || currentRate;
+                    const pkrValue = (item.amount || 0) * rateUsed;
 
                     html += `
                         <tr>
                             <td>${item.userEmail || 'Unknown'}</td>
                             <td>${item.method || 'Unknown'}</td>
-                            <td>${(item.amount || 0).toFixed(2)}</td>
-                            <td>${(item.total || 0).toFixed(2)}</td>
+                            <td>${(item.amount || 0).toFixed(2)} TK</td>
+                            <td style="color: var(--primary); font-weight: bold;">${rateUsed.toFixed(2)}</td>
+                            <td style="color: var(--success); font-weight: bold;">Rs. ${pkrValue.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                            <td>${(item.total || 0).toFixed(2)} TK</td>
                             <td>
-                                <button class="btn btn-sm" style="background:var(--blue)" onclick="window.viewWithdrawDetails('${key}', '${item.userEmail}', '${item.method}', '${item.account}', ${item.amount}, ${item.total}, '${item.userId}')"><i class="fas fa-eye"></i></button>
+                                <button class="btn btn-sm" style="background:var(--blue)" onclick="window.viewWithdrawDetails('${key}', '${item.userEmail}', '${item.method}', '${item.account}', ${item.amount}, ${item.total}, '${item.userId}', ${rateUsed}, ${pkrValue})"><i class="fas fa-eye"></i></button>
                             </td>
                             <td>
                                 ${item.status === 'pending' ? `
