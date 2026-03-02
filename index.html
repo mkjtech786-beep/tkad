@@ -351,6 +351,96 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
+        /* ===== RATE DISPLAY CARD STYLES ===== */
+        .rate-display-card {
+            background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+            border: 2px solid var(--primary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .rate-display-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), #ff9100, var(--primary));
+            animation: rateGlow 2s ease-in-out infinite;
+        }
+        @keyframes rateGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        .rate-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        .rate-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
+        }
+        .rate-unit {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+        .rate-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .rate-detail-item {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .rate-label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+        }
+        .rate-number {
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .rate-mode {
+            font-weight: bold;
+            color: var(--success);
+        }
+        .rate-live-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--success);
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: livePulse 1s infinite;
+        }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
         /* ===== NEW TRADING CONTROL STYLES ===== */
         .trading-control-card {
             background: linear-gradient(135deg, #1e3c72, #2a5298);
@@ -491,7 +581,37 @@
                     <h3 id="total-user-count">0</h3>
                     <p>Total Registered Users</p>
                 </div>
-                
+
+                <!-- ===== CURRENT RATE DISPLAY (SAME AS USER PANEL) ===== -->
+                <div class="rate-display-card">
+                    <div class="rate-header">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Current Market Rate</span>
+                    </div>
+                    <div class="rate-value">
+                        <span id="admin-current-rate">0.00</span>
+                        <span class="rate-unit">PKR</span>
+                    </div>
+                    <div class="rate-details">
+                        <div class="rate-detail-item">
+                            <span class="rate-label">TK Price:</span>
+                            <span id="admin-tk-price-display" class="rate-number">0.00</span> USDT
+                        </div>
+                        <div class="rate-detail-item">
+                            <span class="rate-label">USDT Rate:</span>
+                            <span id="admin-usdt-rate-display" class="rate-number">0.00</span> PKR
+                        </div>
+                        <div class="rate-detail-item">
+                            <span class="rate-label">Mode:</span>
+                            <span id="admin-rate-mode-display" class="rate-mode">Manual</span>
+                        </div>
+                    </div>
+                    <div class="rate-live-indicator">
+                        <span class="live-dot"></span>
+                        <span>Live Updates</span>
+                    </div>
+                </div>
+
                 <!-- ===== NEW TRADING CONTROL SECTION ===== -->
                 <div class="trading-control-card">
                     <h3><i class="fas fa-chart-line"></i> Trading Control Center</h3>
@@ -676,7 +796,16 @@
                 <div style="overflow-x: auto;">
                     <table class="admin-table">
                         <thead>
-                            <tr><th>User</th><th>Method</th><th>Amount</th><th>Ref</th><th>Action</th></tr>
+                            <tr>
+                                <th>User</th>
+                                <th>Method</th>
+                                <th>TK Amount</th>
+                                <th>Rate</th>
+                                <th>PKR Value</th>
+                                <th>Ref</th>
+                                <th>Notes</th>
+                                <th>Action</th>
+                            </tr>
                         </thead>
                         <tbody id="admin-deposit-list"></tbody>
                     </table>
@@ -725,6 +854,7 @@
                 <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
                 <h3 class="text-orange" style="margin-top: 15px;">Financial Summary</h3>
                 
+                <!-- Overall Stats -->
                 <div class="summary-grid" style="margin-top: 20px;">
                     <div class="summary-card">
                         <h4><i class="fas fa-arrow-down text-green"></i> Total Approved Deposits</h4>
@@ -738,17 +868,25 @@
                     </div>
                 </div>
 
+                <!-- Admin Profit Card -->
+                <div class="summary-card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(255,102,0,0.2), rgba(255,102,0,0.05)); border: 2px solid var(--primary);">
+                    <h4><i class="fas fa-coins text-orange"></i> Admin Profit</h4>
+                    <div class="amount text-orange" id="admin-profit">Rs. 0</div>
+                    <small style="color: var(--text-muted);">(Deposits - Withdrawals) = Platform Earnings</small>
+                </div>
+
+                <!-- Net Status -->
                 <div class="summary-card" style="margin-bottom: 20px;">
-                    <h4>Net Profit/Loss</h4>
+                    <h4>Net Status</h4>
                     <div class="amount" id="net-profit-loss">Rs. 0</div>
-                    <small style="color: var(--text-muted);">Deposits - Withdrawals</small>
+                    <small style="color: var(--text-muted);">Positive = Profit | Negative = Loss</small>
                 </div>
 
                 <h3 class="text-orange" style="margin: 20px 0 15px 0;">User-wise Profit/Loss (PKR)</h3>
                 <div style="overflow-x: auto;">
                     <table class="admin-table">
                         <thead>
-                            <tr><th>User</th><th>Total Deposits</th><th>Total Withdrawals</th><th>Profit/Loss</th></tr>
+                            <tr><th>User</th><th>Total Deposits</th><th>Total Withdrawals</th><th>Net</th></tr>
                         </thead>
                         <tbody id="user-profit-loss-list"></tbody>
                     </table>
@@ -1097,9 +1235,72 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let marketData = { tkPrice: 1.50, usdtRate: 280 };
-        let appSettings = { minWithdraw: 50, withdrawFee: 0.05 }; 
-        let adminSelectedChatUser = null; 
+        let marketData = { tkPrice: 1.50, usdtRate: 280, mode: 'manual', basePrice: 280, autoRange: 50, autoInterval: 30 };
+        let appSettings = { minWithdraw: 50, withdrawFee: 0.05 };
+        let adminSelectedChatUser = null;
+        let serverTimeOffset = 0;
+        let currentFluctuatedPrice = null;
+        let priceUpdateInterval = null;
+
+        // ===== TIME-BASED AUTO PRICE SYSTEM (SAME AS USER) =====
+        function getServerTime() {
+            return Date.now() + serverTimeOffset;
+        }
+
+        function calculateTimeBasedPrice() {
+            const serverTime = getServerTime();
+            const basePrice = marketData.basePrice || (marketData.tkPrice * marketData.usdtRate) || 280;
+            const range = marketData.autoRange || 50;
+            const intervalSeconds = marketData.autoInterval || 30;
+            const intervalMs = intervalSeconds * 1000;
+            const timeSlot = Math.floor(serverTime / intervalMs);
+            const cycleDuration = 10;
+            const positionInCycle = (timeSlot % cycleDuration) / cycleDuration;
+            const sineValue = Math.sin(positionInCycle * Math.PI * 2);
+            const fluctuation = sineValue * range;
+            const finalPrice = basePrice + fluctuation;
+            return Math.max(finalPrice, 1);
+        }
+
+        function updateAutoPrice() {
+            if (marketData.mode !== 'auto') return;
+            const newPrice = calculateTimeBasedPrice();
+            currentFluctuatedPrice = newPrice;
+            updateAdminRateDisplay();
+        }
+
+        function startAutoPriceFluctuation() {
+            if (priceUpdateInterval) clearInterval(priceUpdateInterval);
+            updateAutoPrice();
+            const intervalMs = (marketData.autoInterval || 30) * 1000;
+            priceUpdateInterval = setInterval(updateAutoPrice, intervalMs);
+        }
+
+        function stopAutoPriceFluctuation() {
+            if (priceUpdateInterval) {
+                clearInterval(priceUpdateInterval);
+                priceUpdateInterval = null;
+            }
+            currentFluctuatedPrice = null;
+        }
+
+        function updateAdminRateDisplay() {
+            let currentRate, displayTkPrice, displayUsdtRate;
+            if (marketData.mode === 'auto' && currentFluctuatedPrice !== null) {
+                displayTkPrice = marketData.tkPrice || 1.50;
+                displayUsdtRate = marketData.usdtRate || 280;
+                currentRate = currentFluctuatedPrice.toFixed(2);
+            } else {
+                displayTkPrice = marketData.tkPrice || 1.50;
+                displayUsdtRate = marketData.usdtRate || 280;
+                currentRate = (displayTkPrice * displayUsdtRate).toFixed(2);
+            }
+            document.getElementById('admin-current-rate').innerText = currentRate;
+            document.getElementById('admin-tk-price-display').innerText = displayTkPrice.toFixed(2);
+            document.getElementById('admin-usdt-rate-display').innerText = displayUsdtRate.toFixed(2);
+            document.getElementById('admin-rate-mode-display').innerText = (marketData.mode || 'manual').toUpperCase();
+        }
+        // ======================================================
 
         window.showToast = (msg, type = 'success') => {
             const container = document.getElementById('toast-container');
@@ -1188,14 +1389,33 @@
         function initApp() {
             document.getElementById('app-container').classList.remove('hidden');
 
+            // Get server time offset for auto price calculation
+            const offsetRef = ref(db, '.info/serverTimeOffset');
+            onValue(offsetRef, (snap) => {
+                serverTimeOffset = snap.val() || 0;
+            });
+
             onValue(ref(db, 'market'), (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
+                    const oldMode = marketData.mode;
                     marketData = data;
                     document.getElementById('admin-rate-mode').value = data.mode || 'manual';
                     document.getElementById('admin-auto-range').value = data.autoRange || 100;
                     document.getElementById('admin-auto-interval').value = data.autoInterval || 30;
                     toggleRateMode();
+
+                    // Handle auto mode price fluctuation (same as user panel)
+                    if (data.mode === 'auto') {
+                        if (oldMode !== 'auto' || !priceUpdateInterval) {
+                            startAutoPriceFluctuation();
+                        }
+                    } else {
+                        stopAutoPriceFluctuation();
+                    }
+
+                    // Update rate display
+                    updateAdminRateDisplay();
                 }
             });
 
@@ -1303,12 +1523,26 @@
                     Object.keys(data).forEach((key) => {
                         const item = data[key];
                         if(item.status === 'pending') count++;
+                        
+                        // Get locked rate from deposit data (rate at time of deposit)
+                        const tkPrice = item.tkPriceAtDeposit || marketData.tkPrice || 1.50;
+                        const usdtRate = item.usdtRateAtDeposit || marketData.usdtRate || 280;
+                        const lockedRate = tkPrice * usdtRate;
+                        const pkrValue = (item.rawAmount || (item.amount * lockedRate));
+                        
                         list.innerHTML += `
                             <tr>
                                 <td>${item.userEmail}</td>
                                 <td>${item.method}</td>
                                 <td>${item.amount.toFixed(2)} TK</td>
+                                <td style="color: var(--primary); font-weight: bold;">${lockedRate.toFixed(2)}</td>
+                                <td style="color: var(--success); font-weight: bold;">Rs. ${pkrValue.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
                                 <td>${item.ref}</td>
+                                <td>
+                                    <input type="text" id="dep-note-${key}" placeholder="Add note..." value="${item.notes || ''}" 
+                                        style="background: #2a2a2a; border: 1px solid #444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; width: 100px;"
+                                        onchange="window.saveDepositNote('${key}', this.value)">
+                                </td>
                                 <td>
                                     ${item.status === 'pending' ? `
                                     <button class="btn btn-sm" style="background:var(--success)" onclick="window.approveDep('${key}', '${item.userId}', ${item.amount})"><i class="fas fa-check"></i></button>
@@ -1322,6 +1556,17 @@
                 }
             });
         }
+        
+        window.saveDepositNote = (key, note) => {
+            update(ref(db, 'deposits/' + key), {
+                notes: note,
+                noteUpdatedAt: Date.now()
+            }).then(() => {
+                showToast('Note saved');
+            }).catch(() => {
+                showToast('Failed to save note', 'error');
+            });
+        };
 
         window.approveDep = (key, uid, amount) => {
             const updates = {};
@@ -1343,7 +1588,7 @@
             });
         };
         
-        // UPDATED: Now shows Rate and PKR Value columns
+        // UPDATED: Now shows Rate and PKR Value columns using LOCKED rate
         function loadAdminWithdrawals() {
             const list = document.getElementById('admin-withdraw-list');
             if(!list) return;
@@ -1359,29 +1604,27 @@
 
                 let count = 0;
                 let html = "";
-                
-                // Get current rate for calculations if rate not saved
-                const currentRate = marketData.usdtRate || 280;
 
                 Object.keys(data).forEach((key) => {
                     const item = data[key];
                     if(!item) return;
                     if (item.status === 'pending') count++;
                     
-                    // Calculate PKR value
-                    const rateUsed = item.rate || currentRate;
-                    const pkrValue = (item.amount || 0) * rateUsed;
+                    // Use LOCKED rate from withdrawal data (rate at time of request)
+                    // This is the rate user saw when placing withdrawal
+                    const lockedRate = item.lockedRate || (marketData.tkPrice * marketData.usdtRate) || 280;
+                    const pkrValue = item.pkrAmount || (item.amount * lockedRate);
 
                     html += `
                         <tr>
                             <td>${item.userEmail || 'Unknown'}</td>
                             <td>${item.method || 'Unknown'}</td>
                             <td>${(item.amount || 0).toFixed(2)} TK</td>
-                            <td style="color: var(--primary); font-weight: bold;">${rateUsed.toFixed(2)}</td>
+                            <td style="color: var(--primary); font-weight: bold;">${lockedRate.toFixed(2)}</td>
                             <td style="color: var(--success); font-weight: bold;">Rs. ${pkrValue.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
                             <td>${(item.total || 0).toFixed(2)} TK</td>
                             <td>
-                                <button class="btn btn-sm" style="background:var(--blue)" onclick="window.viewWithdrawDetails('${key}', '${item.userEmail}', '${item.method}', '${item.account}', ${item.amount}, ${item.total}, '${item.userId}', ${rateUsed}, ${pkrValue})"><i class="fas fa-eye"></i></button>
+                                <button class="btn btn-sm" style="background:var(--blue)" onclick="window.viewWithdrawDetails('${key}', '${item.userEmail}', '${item.method}', '${item.account}', ${item.amount}, ${item.total}, '${item.userId}', ${lockedRate}, ${pkrValue})"><i class="fas fa-eye"></i></button>
                             </td>
                             <td>
                                 ${item.status === 'pending' ? `
@@ -1606,54 +1849,73 @@
         }
         
         function loadSummaryData() {
-            const usdtRate = marketData.usdtRate || 280;
-            const tkPrice = marketData.tkPrice || 1.50;
-            
             get(ref(db, 'deposits')).then(depositSnap => {
                 const deposits = depositSnap.val() || {};
                 let totalDepositsTK = 0;
+                let totalDepositsPKR = 0;
                 let userDeposits = {};
                 
                 Object.values(deposits).forEach(dep => {
                     if (dep.status === 'approved') {
                         totalDepositsTK += dep.amount;
-                        if (!userDeposits[dep.userId]) userDeposits[dep.userId] = 0;
-                        userDeposits[dep.userId] += dep.amount;
+                        
+                        // Calculate PKR using locked rate at time of deposit
+                        const tkPrice = dep.tkPriceAtDeposit || marketData.tkPrice || 1.50;
+                        const usdtRate = dep.usdtRateAtDeposit || marketData.usdtRate || 280;
+                        const lockedRate = tkPrice * usdtRate;
+                        const pkrValue = dep.rawAmount || (dep.amount * lockedRate);
+                        totalDepositsPKR += pkrValue;
+                        
+                        if (!userDeposits[dep.userId]) userDeposits[dep.userId] = { tk: 0, pkr: 0 };
+                        userDeposits[dep.userId].tk += dep.amount;
+                        userDeposits[dep.userId].pkr += pkrValue;
                     }
                 });
                 
                 get(ref(db, 'withdrawals')).then(withdrawSnap => {
                     const withdrawals = withdrawSnap.val() || {};
                     let totalWithdrawalsTK = 0;
+                    let totalWithdrawalsPKR = 0;
                     let userWithdrawals = {};
                     
                     Object.values(withdrawals).forEach(withdraw => {
                         if (withdraw.status === 'approved') {
                             totalWithdrawalsTK += withdraw.total;
-                            if (!userWithdrawals[withdraw.userId]) userWithdrawals[withdraw.userId] = 0;
-                            userWithdrawals[withdraw.userId] += withdraw.total;
+                            
+                            // Use locked PKR value from withdrawal data
+                            const pkrValue = withdraw.pkrAmount || withdraw.finalPKR || (withdraw.amount * (withdraw.lockedRate || 280));
+                            totalWithdrawalsPKR += pkrValue;
+                            
+                            if (!userWithdrawals[withdraw.userId]) userWithdrawals[withdraw.userId] = { tk: 0, pkr: 0 };
+                            userWithdrawals[withdraw.userId].tk += withdraw.total;
+                            userWithdrawals[withdraw.userId].pkr += pkrValue;
                         }
                     });
                     
-                    const totalDepositsPKR = totalDepositsTK * usdtRate;
-                    const totalWithdrawalsPKR = totalWithdrawalsTK * usdtRate;
-                    const netProfitLoss = totalDepositsPKR - totalWithdrawalsPKR;
+                    // Calculate admin profit (Deposits - Withdrawals)
+                    const adminProfit = totalDepositsPKR - totalWithdrawalsPKR;
                     
                     document.getElementById('total-deposits-pkr').innerText = 'Rs. ' + totalDepositsPKR.toLocaleString('en-IN', {maximumFractionDigits: 2});
                     document.getElementById('total-deposits-tk').innerText = totalDepositsTK.toFixed(2) + ' TK';
                     document.getElementById('total-withdrawals-pkr').innerText = 'Rs. ' + totalWithdrawalsPKR.toLocaleString('en-IN', {maximumFractionDigits: 2});
                     document.getElementById('total-withdrawals-tk').innerText = totalWithdrawalsTK.toFixed(2) + ' TK';
                     
-                    const netElement = document.getElementById('net-profit-loss');
-                    netElement.innerText = 'Rs. ' + Math.abs(netProfitLoss).toLocaleString('en-IN', {maximumFractionDigits: 2});
-                    netElement.className = 'amount ' + (netProfitLoss >= 0 ? 'profit' : 'loss');
+                    // Admin Profit
+                    const profitElement = document.getElementById('admin-profit');
+                    profitElement.innerText = 'Rs. ' + Math.abs(adminProfit).toLocaleString('en-IN', {maximumFractionDigits: 2});
+                    profitElement.className = 'amount ' + (adminProfit >= 0 ? 'text-orange' : 'loss');
                     
-                    loadUserProfitLoss(userDeposits, userWithdrawals, usdtRate);
+                    // Net Status
+                    const netElement = document.getElementById('net-profit-loss');
+                    netElement.innerText = (adminProfit >= 0 ? '+' : '-') + 'Rs. ' + Math.abs(adminProfit).toLocaleString('en-IN', {maximumFractionDigits: 2});
+                    netElement.className = 'amount ' + (adminProfit >= 0 ? 'profit' : 'loss');
+                    
+                    loadUserProfitLoss(userDeposits, userWithdrawals);
                 });
             });
         }
         
-        function loadUserProfitLoss(userDeposits, userWithdrawals, usdtRate) {
+        function loadUserProfitLoss(userDeposits, userWithdrawals) {
             const list = document.getElementById('user-profit-loss-list');
             list.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777;">Loading...</td></tr>';
             
@@ -1663,20 +1925,20 @@
                 
                 Object.keys(users).forEach(uid => {
                     const user = users[uid];
-                    const depTK = userDeposits[uid] || 0;
-                    const withTK = userWithdrawals[uid] || 0;
-                    const depPKR = depTK * usdtRate;
-                    const withPKR = withTK * usdtRate;
-                    const profitLoss = depPKR - withPKR;
+                    const depData = userDeposits[uid] || { tk: 0, pkr: 0 };
+                    const withData = userWithdrawals[uid] || { tk: 0, pkr: 0 };
+                    const depPKR = depData.pkr;
+                    const withPKR = withData.pkr;
+                    const net = depPKR - withPKR;
                     
-                    if (depTK > 0 || withTK > 0) {
+                    if (depData.tk > 0 || withData.tk > 0) {
                         html += `
                             <tr>
                                 <td>${user.name || user.email || 'Unknown'}</td>
-                                <td style="color: var(--success);">Rs. ${depPKR.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
-                                <td style="color: var(--danger);">Rs. ${withPKR.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
-                                <td style="color: ${profitLoss >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: bold;">
-                                    ${profitLoss >= 0 ? '+' : '-'}Rs. ${Math.abs(profitLoss).toLocaleString('en-IN', {maximumFractionDigits: 2})}
+                                <td style="color: var(--success);">Rs. ${depPKR.toLocaleString('en-IN', {maximumFractionDigits: 2})}<br><small style="color:#666">${depData.tk.toFixed(2)} TK</small></td>
+                                <td style="color: var(--danger);">Rs. ${withPKR.toLocaleString('en-IN', {maximumFractionDigits: 2})}<br><small style="color:#666">${withData.tk.toFixed(2)} TK</small></td>
+                                <td style="color: ${net >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: bold;">
+                                    ${net >= 0 ? '+' : '-'}Rs. ${Math.abs(net).toLocaleString('en-IN', {maximumFractionDigits: 2})}
                                 </td>
                             </tr>
                         `;
