@@ -793,6 +793,11 @@
             <section id="admin-deposits" class="section hidden">
                 <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
                 <h3 class="text-orange" style="margin-top: 15px;">Deposit Approvals</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn btn-sm" style="background: var(--danger); width: auto;" onclick="window.deleteAllDepositHistory()">
+                        <i class="fas fa-trash"></i> Delete All Deposit History
+                    </button>
+                </div>
                 <div style="overflow-x: auto;">
                     <table class="admin-table">
                         <thead>
@@ -816,6 +821,11 @@
             <section id="admin-withdrawals" class="section hidden">
                 <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
                 <h3 class="text-orange" style="margin-top: 15px;">Withdrawal Requests</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn btn-sm" style="background: var(--danger); width: auto;" onclick="window.deleteAllWithdrawHistory()">
+                        <i class="fas fa-trash"></i> Delete All Withdraw History
+                    </button>
+                </div>
                 <div style="overflow-x: auto;">
                     <table class="admin-table">
                         <thead>
@@ -926,7 +936,12 @@
             <section id="admin-trading" class="section hidden">
                 <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
                 <h3 class="text-orange" style="margin-top: 15px;"><i class="fas fa-exchange-alt"></i> Trading Management</h3>
-                
+
+                <div style="display: flex; gap: 10px; margin: 15px 0;">
+                    <button class="btn btn-sm" style="background: var(--danger); width: auto;" onclick="window.deleteAllTradingHistory()">
+                        <i class="fas fa-trash"></i> Delete All Trading History
+                    </button>
+                </div>
                 <div class="trading-control-card" style="margin-top: 20px;">
                     <h3><i class="fas fa-sliders-h"></i> Market Control Panel</h3>
                     <p style="opacity: 0.8; margin-bottom: 15px;">Control the outcome of all user trades</p>
@@ -977,7 +992,7 @@
                 <div style="overflow-x: auto;">
                     <table class="admin-table">
                         <thead>
-                            <tr><th>User</th><th>Type</th><th>Amount</th><th>Result</th><th>Time</th></tr>
+                            <tr><th>User</th><th>Type</th><th>Amount</th><th>Result</th><th>Time</th><th>Action</th></tr>
                         </thead>
                         <tbody id="admin-trades-list"></tbody>
                     </table>
@@ -1548,6 +1563,7 @@
                                     <button class="btn btn-sm" style="background:var(--success)" onclick="window.approveDep('${key}', '${item.userId}', ${item.amount})"><i class="fas fa-check"></i></button>
                                     <button class="btn btn-sm" style="background:var(--danger)" onclick="window.rejectDep('${key}')"><i class="fas fa-times"></i></button>
                                     ` : `<span class="status-badge status-${item.status}">${item.status}</span>`}
+                                    <button class="btn btn-sm" style="background:#555; margin-left:5px;" onclick="window.deleteSingleDeposit('${key}', '${item.userEmail}')" title="Delete"><i class="fas fa-trash"></i></button>
                                 </td>
                             </tr>
                         `;
@@ -1631,6 +1647,7 @@
                                     <button class="btn btn-sm" style="background:var(--success)" onclick="window.approveWithdraw('${key}')"><i class="fas fa-check"></i></button>
                                     <button class="btn btn-sm" style="background:var(--danger)" onclick="window.rejectWithdraw('${key}', '${item.userId}', ${item.total})"><i class="fas fa-times"></i></button>
                                 ` : `<span class="status-badge status-${item.status}">${item.status}</span>`}
+                                <button class="btn btn-sm" style="background:#555; margin-left:5px;" onclick="window.deleteSingleWithdraw('${key}', '${item.userEmail}')" title="Delete"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
                     `;
@@ -2363,6 +2380,9 @@
                             <td>${trade.amount || 0} TK</td>
                             <td><span class="status-badge ${resultClass}">${resultText}</span></td>
                             <td>${time}</td>
+                            <td>
+                                <button class="btn btn-sm" style="background:#555;" onclick="window.deleteSingleTrade('${trade.key}', '${trade.userEmail || 'Unknown'}')" title="Delete"><i class="fas fa-trash"></i></button>
+                            </td>
                         </tr>
                     `;
                 });
@@ -2393,6 +2413,102 @@
         updateUserCount();
 
         initApp();
+
+        // ===== DELETE HISTORY FUNCTIONS =====
+        // Delete single deposit
+        window.deleteSingleDeposit = (key, userEmail) => {
+            if (!confirm(`Delete this deposit record for ${userEmail}?`)) {
+                return;
+            }
+
+            set(ref(db, 'deposits/' + key), null).then(() => {
+                showToast(`Deposit record deleted for ${userEmail}`);
+            }).catch(err => {
+                showToast("Error deleting deposit: " + err.message, "error");
+            });
+        };
+
+        // Delete single withdraw
+        window.deleteSingleWithdraw = (key, userEmail) => {
+            if (!confirm(`Delete this withdraw record for ${userEmail}?`)) {
+                return;
+            }
+
+            set(ref(db, 'withdrawals/' + key), null).then(() => {
+                showToast(`Withdraw record deleted for ${userEmail}`);
+            }).catch(err => {
+                showToast("Error deleting withdraw: " + err.message, "error");
+            });
+        };
+
+        // Delete single trade
+        window.deleteSingleTrade = (key, userEmail) => {
+            if (!confirm(`Delete this trade record for ${userEmail}?`)) {
+                return;
+            }
+
+            set(ref(db, 'trades/' + key), null).then(() => {
+                showToast(`Trade record deleted for ${userEmail}`);
+            }).catch(err => {
+                showToast("Error deleting trade: " + err.message, "error");
+            });
+        };
+
+        // Delete all deposits
+        window.deleteAllDepositHistory = () => {
+            if (!confirm("Are you sure you want to DELETE ALL deposit history? This action cannot be undone!")) {
+                return;
+            }
+            if (!confirm("WARNING: All deposit records will be permanently deleted! Confirm again?")) {
+                return;
+            }
+
+            set(ref(db, 'deposits'), null).then(() => {
+                showToast("All deposit history deleted successfully!");
+                document.getElementById('admin-deposit-list').innerHTML = '<tr><td colspan="8" style="text-align:center; color:#777;">No deposits found.</td></tr>';
+                document.getElementById('admin-dep-pending-count').innerText = '0';
+            }).catch(err => {
+                showToast("Error deleting deposit history: " + err.message, "error");
+            });
+        };
+
+        // Delete all withdraws
+        window.deleteAllWithdrawHistory = () => {
+            if (!confirm("Are you sure you want to DELETE ALL withdraw history? This action cannot be undone!")) {
+                return;
+            }
+            if (!confirm("WARNING: All withdraw records will be permanently deleted! Confirm again?")) {
+                return;
+            }
+
+            set(ref(db, 'withdrawals'), null).then(() => {
+                showToast("All withdraw history deleted successfully!");
+                document.getElementById('admin-withdraw-list').innerHTML = '<tr><td colspan="8" style="text-align:center; color:#777;">No withdrawals found.</td></tr>';
+                document.getElementById('admin-with-pending-count').innerText = '0';
+            }).catch(err => {
+                showToast("Error deleting withdraw history: " + err.message, "error");
+            });
+        };
+
+        // Delete all trades
+        window.deleteAllTradingHistory = () => {
+            if (!confirm("Are you sure you want to DELETE ALL trading history? This action cannot be undone!")) {
+                return;
+            }
+            if (!confirm("WARNING: All trading records will be permanently deleted! Confirm again?")) {
+                return;
+            }
+
+            set(ref(db, 'trades'), null).then(() => {
+                showToast("All trading history deleted successfully!");
+                document.getElementById('admin-trades-list').innerHTML = '<tr><td colspan="6" style="text-align:center; color:#777;">No trades found.</td></tr>';
+                document.getElementById('admin-total-trades').innerText = '0';
+                document.getElementById('admin-win-rate').innerText = '0%';
+            }).catch(err => {
+                showToast("Error deleting trading history: " + err.message, "error");
+            });
+        };
+        // ===== END DELETE HISTORY FUNCTIONS =====
     </script>
 </body>
 </html>
