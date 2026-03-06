@@ -677,6 +677,12 @@
                         <span class="menu-icon" style="color: #e91e63;"><i class="fas fa-exchange-alt"></i></span>
                         <div>Trading</div>
                     </div>
+                    <!-- BANNED CHAT BOX MENU -->
+                    <div class="menu-card" onclick="window.showAdminSection('bannedChat')" style="border: 2px solid var(--danger);">
+                        <span class="menu-icon" style="color: var(--danger);"><i class="fas fa-ban"></i></span>
+                        <div>Banned Chat Box <span id="banned-chat-count" class="badge" style="background:var(--danger); padding:2px 5px; border-radius:50%; font-size:0.7rem; color:white;">0</span></div>
+                    </div>
+
                 </div>
 
                 <div class="menu-card" onclick="window.showAdminSection('chat')" style="text-align: left; margin-bottom: 20px;">
@@ -999,6 +1005,37 @@
                 </div>
             </section>
             <!-- ===== END TRADING MANAGEMENT SECTION ===== -->
+
+            <!-- ===== BANNED CHAT BOX SECTION ===== -->
+            <section id="admin-bannedChat" class="section hidden">
+                <button class="btn btn-sm btn-outline" onclick="window.showAdminSection('dashboard')">Back</button>
+                <h3 class="text-orange" style="margin-top: 15px;"><i class="fas fa-ban"></i> Banned Users Chat</h3>
+                <p style="color: #888; margin-bottom: 15px;">Only banned users can chat here. You can unban users from this panel.</p>
+
+                <div class="chat-container" style="height: 65vh;">
+                    <div id="banned-chat-user-list" class="chat-user-list" style="border: 2px solid var(--danger);">
+                        <div style="padding:10px; text-align:center; color:#777;">Loading banned users...</div>
+                    </div>
+                    <div id="banned-chat-window" class="chat-box hidden" style="border: 2px solid var(--danger);">
+                        <div style="padding:10px; border-bottom: 1px solid #333; background:var(--bg-card); display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                Chatting with: <strong id="banned-chatting-with-name" class="text-orange">--</strong>
+                                <span id="banned-user-email" style="color:#888; font-size:0.8rem; margin-left:10px;"></span>
+                            </div>
+                            <button class="btn btn-sm" style="background:var(--success); width:auto;" onclick="window.unbanCurrentUser()">
+                                <i class="fas fa-unlock"></i> Unban User
+                            </button>
+                        </div>
+                        <div class="chat-messages" id="banned-chat-messages"></div>
+                        <div class="chat-input-area">
+                            <input type="text" id="banned-admin-chat-input" placeholder="Reply to banned user...">
+                            <button class="btn btn-sm" onclick="window.adminSendBannedReply()">Reply</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- ===== END BANNED CHAT BOX SECTION ===== -->
+
 
             <!-- Admin: News -->
             <section id="admin-news" class="section hidden">
@@ -1468,6 +1505,7 @@
                 loadAdminTrading();
                 loadMinTradeSetting();
             }
+            if (sectionId === 'bannedChat') loadBannedChatList();
         };
 
         function loadAdminMarket() {
@@ -1765,8 +1803,8 @@
                     Object.keys(data).forEach((uid) => {
                         const u = data[uid];
                         const isBanned = u.isBanned || false;
-                        const banBtnStyle = isBanned ? "background:#555; cursor:not-allowed" : "background:var(--danger)";
-                        const banText = isBanned ? "Banned" : "Ban Account";
+                        const banBtnStyle = isBanned ? "background:var(--success)" : "background:var(--danger)";
+                        const banText = isBanned ? "Unban Account" : "Ban Account";
                         
                         // Location info
                         let locationHtml = '';
@@ -1840,7 +1878,12 @@
 
         window.banUser = (uid, isAlreadyBanned) => {
             if(isAlreadyBanned) {
-                showToast("User is already banned", "error");
+                // Unban the user
+                if(confirm("Are you sure you want to unban this user?")) {
+                    update(ref(db, 'users/' + uid), {
+                        isBanned: false
+                    }).then(() => showToast("User Unbanned - Account Active"));
+                }
                 return;
             }
             if(confirm("Are you sure you want to ban this user?")) {
@@ -1849,22 +1892,6 @@
                 }).then(() => showToast("User Banned"));
             }
         }
-
-        window.postNews = () => {
-            const title = document.getElementById('admin-news-headline').value;
-            if(title) {
-                set(ref(db, 'news'), null).then(() => {
-                    push(ref(db, 'news'), {
-                        title: title,
-                        date: new Date().toLocaleDateString()
-                    }).then(() => {
-                        showToast("News Posted (Old Deleted)");
-                        document.getElementById('admin-news-headline').value = "";
-                    });
-                });
-            }
-        }
-        
         function loadSummaryData() {
             get(ref(db, 'deposits')).then(depositSnap => {
                 const deposits = depositSnap.val() || {};
@@ -2509,6 +2536,152 @@
             });
         };
         // ===== END DELETE HISTORY FUNCTIONS =====
-    </script>
+    
+
+        // ===== BANNED CHAT BOX FUNCTIONS =====
+        let bannedSelectedUser = null;
+        let bannedSelectedUserName = '';
+        let bannedSelectedUserEmail = '';
+
+        function loadBannedChatList() {
+            const list = document.getElementById('banned-chat-user-list');
+            list.innerHTML = '<div style="padding:10px; text-align:center; color:#777;">Loading banned users...</div>';
+
+            onValue(ref(db, 'users'), (snapshot) => {
+                const data = snapshot.val();
+                list.innerHTML = "";
+                let bannedCount = 0;
+
+                if(data) {
+                    Object.keys(data).forEach((uid) => {
+                        const u = data[uid];
+                        if (u.isBanned === true) {
+                            bannedCount++;
+                            const item = document.createElement('div');
+                            item.className = 'chat-user-item';
+                            item.style.borderLeft = '3px solid var(--danger)';
+                            item.innerHTML = `
+                                <span><i class="fas fa-user-slash" style="color:var(--danger);"></i> ${u.name}</span>
+                                <button class="btn btn-sm" style="background:var(--success); width:auto;" onclick="event.stopPropagation(); window.unbanUser('${uid}')">
+                                    <i class="fas fa-unlock"></i> Unban
+                                </button>
+                            `;
+                            item.onclick = () => selectBannedChatUser(uid, u.name, u.email);
+                            list.appendChild(item);
+
+                            // Monitor unread messages
+                            const chatRef = ref(db, 'bannedChats/' + uid);
+                            onValue(chatRef, (chatSnap) => {
+                                const chatData = chatSnap.val();
+                                if(chatData) {
+                                    const msgKeys = Object.keys(chatData);
+                                    const lastKey = msgKeys[msgKeys.length - 1];
+                                    const lastMsg = chatData[lastKey];
+                                    if(lastMsg && lastMsg.sender !== 'admin' && bannedSelectedUser !== uid) {
+                                        const badgeSpan = `<span class="unread-badge"></span>`;
+                                        const existingBadge = item.querySelector('.unread-badge');
+                                        if(!existingBadge) item.innerHTML += badgeSpan;
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+
+                document.getElementById('banned-chat-count').innerText = bannedCount;
+
+                if (bannedCount === 0) {
+                    list.innerHTML = '<div style="padding:20px; text-align:center; color:#777;"><i class="fas fa-check-circle" style="color:var(--success); font-size:2rem; margin-bottom:10px; display:block;"></i>No banned users found.</div>';
+                }
+            });
+        }
+
+        function selectBannedChatUser(uid, name, email) {
+            bannedSelectedUser = uid;
+            bannedSelectedUserName = name;
+            bannedSelectedUserEmail = email;
+            document.getElementById('banned-chatting-with-name').innerText = name;
+            document.getElementById('banned-user-email').innerText = email || '';
+
+            const userItem = document.querySelector(`#banned-chat-user-list .chat-user-item:nth-child(${getBannedUserIndex(uid) + 1})`);
+            if(userItem) {
+                const badge = userItem.querySelector('.unread-badge');
+                if(badge) badge.remove();
+            }
+
+            document.getElementById('banned-chat-window').classList.remove('hidden');
+
+            const chatRef = ref(db, 'bannedChats/' + uid);
+            onValue(chatRef, (snapshot) => {
+                const container = document.getElementById('banned-chat-messages');
+                container.innerHTML = "";
+                const data = snapshot.val();
+
+                if (!data) {
+                    container.innerHTML = `<div style="text-align:center; color:#777; margin-top:20px;">No messages yet.</div>`;
+                    return;
+                }
+
+                Object.values(data).forEach(msg => {
+                    const div = document.createElement('div');
+                    const isAdminMsg = msg.sender === 'admin';
+                    div.className = `message ${isAdminMsg ? 'msg-admin' : 'msg-user'}`;
+                    if (isAdminMsg) {
+                        div.innerHTML = '<i class="fas fa-headset" style="margin-right: 5px;"></i> ' + msg.text;
+                    } else {
+                        div.innerText = msg.text;
+                    }
+                    container.appendChild(div);
+                });
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
+        function getBannedUserIndex(uid) {
+            const items = document.querySelectorAll('#banned-chat-user-list .chat-user-item');
+            let index = 0;
+            items.forEach((item, i) => {
+                if (item.onclick && item.onclick.toString().includes(uid)) {
+                    index = i;
+                }
+            });
+            return index;
+        }
+
+        window.adminSendBannedReply = () => {
+            const input = document.getElementById('banned-admin-chat-input');
+            const text = input.value;
+            if(!text || !bannedSelectedUser) return;
+
+            push(ref(db, 'bannedChats/' + bannedSelectedUser), {
+                sender: 'admin',
+                text: text,
+                timestamp: Date.now()
+            });
+            input.value = "";
+        };
+
+        window.unbanUser = (uid) => {
+            if(confirm("Are you sure you want to unban this user? Their account will become active immediately.")) {
+                update(ref(db, 'users/' + uid), {
+                    isBanned: false
+                }).then(() => {
+                    showToast("User Unbanned - Account Active");
+                    // Clear chat window if this user was selected
+                    if (bannedSelectedUser === uid) {
+                        document.getElementById('banned-chat-window').classList.add('hidden');
+                        bannedSelectedUser = null;
+                    }
+                });
+            }
+        };
+
+        window.unbanCurrentUser = () => {
+            if (!bannedSelectedUser) return;
+            window.unbanUser(bannedSelectedUser);
+        };
+        // ===== END BANNED CHAT BOX FUNCTIONS =====
+
+</script>
 </body>
 </html>
